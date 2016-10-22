@@ -72,7 +72,8 @@
 	};
 
  if ($Goto == $SCRIPTO){
-	load openscript;
+	$choice = inputselect("Öppna Script-fil)", folderreport("itemsrel", "r", "C:\Users\kampe_000\AppData\Roaming\XYplorer\Scripts", , , "|"), , 72, ,"400", "60%");
+	open "C:\Users\kampe_000\AppData\Roaming\XYplorer\Scripts\$choice";
 	};
 
  if ($Goto == $WEBLINK){
