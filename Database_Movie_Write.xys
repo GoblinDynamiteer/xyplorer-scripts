@@ -20,11 +20,19 @@
 	$IMDbId = getmov(IMDbId, $MovieName);
 	};
 
- Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
+/*  Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
  foreach($Data, getkey(DataList, RegexMovie, $RegexList)){	
 	setmov(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexMovie, $RegexList)), getkey($Data . "Replace", RegexMovie, $RegexList), "", | ), $Data, $MovieName);
+	}; */
+ foreach($vad, "Title|Year|Genre|Runtime|imdbRating|Country|Actors"){
+	if($vad != "imdbRating"){
+		setmov(getJsonPy($imdb, $vad), $vad,, $MovieName);
 	};
-	
+	else{
+		setmov(getJsonPy($imdb, $vad), "Rating", $MovieName);
+	};
+ };
+
  setmov(vid_nopath($MovieFullPath), MovieFileName, $MovieName);
  setmov(listfolder($MovieFullPath, "*.en.srt", 1 + 4), SubtitleEnglish, $MovieName);
  setmov(listfolder($MovieFullPath, "*.sv.srt", 1 + 4), SubtitleSwedish, $MovieName);
