@@ -1,0 +1,16 @@
+"CMD till markerad mapp"
+ run 'C:\Windows\System32\cmd.exe /K "cd /d ' . get("curitem",) . '" & chcp 1252';
+"CMD till EXE"
+ run 'C:\Windows\System32\cmd.exe /K "cd /d ' . get("curitem", "path") . '" & chcp 1252 & ' . get("curitem", "file") . '';
+"Text Runret EXE"
+ text runret(get("curitem",));
+
+"Skapa .c-fil"
+ open new(get("Path", [pane=a]) . "\" . input("Ange filnamn") . ".c");
+
+"Kompilera markerad .c-fil"
+ $gccpath = "C:\Program Files (x86)\mingw-w64\i686-6.2.0-win32-dwarf-rt_v5-rev1\mingw32\bin\gcc.exe";
+ $gcc = runret('"' . $gccpath . '" "' . get("curitem",) . '" -o "' . replace(get("curitem",), ".c", ".exe") . '"');
+ if ($gcc != ""){
+	text "Fel vid kompilering:" . <crlf> . $gcc;
+ }; 

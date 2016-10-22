@@ -1,0 +1,42 @@
+	$selectedFolder = get("curitem",);
+	//$htmlFiles = quicksearch("*.html", $SelectedFolder, "|");
+	//listfolder([path=<curpath>], [pattern=*], [flags], [separator="|"])
+	//Listar html-filer i markerad mapp
+	$htmlFiles = listfolder($selectedFolder, "*.html", 4);
+	$pdfFiles = listfolder($selectedFolder, "*.pdf", 4);
+	
+	//sätter gdRecording till filens innehåll, om filen gdRecording.txt finns, annars tom variabel
+	$gdRecording  = (exists($selectedFolder . "\gdRecording.txt") == 1) ? readfile($selectedFolder . "\gdRecording.txt") : "" ;
+	
+	//tar bort .html från slutet av filerna
+	$htmlFiles = replace($htmlFiles, ".html");
+	if(gettoken($htmlFiles, count, "|") > 1){
+		end 1, "Fler än en html-fil, bygg skript för extra - val av main etc";
+	}
+	if(gettoken($pdfFiles, count, "|") > 1){
+		end 1, "Fler än en pdf-fil, bygg skript för extra - val av main etc";
+	}
+	//Sätter övning till typ "Övning" eller "Programmeringsuppgift"
+	$typ = regexmatches($selectedFolder, "(programmeringsuppgift|.vning)");
+	//Hämtar siffrorna efter "Övning" eller "Programmeringsuppgift", samt punkten, Ex: 2.12
+	$siffror = regexmatches($selectedFolder, "\d{1,2}\.\d{1,2}");
+	//Sätter kapitelsiffran
+	
+	$kapitelSiffra = gettoken($siffror, 1, ".");//echo $kapitelSiffra;
+	//Sätter övningssiffran
+	$ovningSiffra = gettoken($siffror, 2, ".");//echo $ovningSiffra;
+	/* Prefix används för SQL-databasen, så varje rad får unikt id,  
+	Övning = 1 Programmeringsuppgift=2, 
+	sedan kapitel 02 övning 03 
+	Ex. 20104 = programmeringsuppgift 1.4 */
+	$prefixId = ($typ == "Övning") ? 1:2;
+	$id = $prefixId . format($kapitelSiffra, 00) . format($ovningSiffra, 00);
+	//Genererar SQL-kommandot och kopierar till clipboard
+	$str = <<<EOD
+INSERT INTO `kod_c`(`id`, `kapitel`, `uppgift`, `kod_html`, `typ`, `gdRecording`, `extra_hfil`, `extra_cfil1`, `extra_cfil2`, `extra_pdf`, `extra_xlsx`) VALUES ('$id', '$kapitelSiffra', '$ovningSiffra', '$htmlFiles', '$typ', '$gdRecording','','','','$pdfFiles','');
+EOD;
+	copytext $str;
+	
+	
+	
+//INSERT INTO `kod_c`(`id`, `kapitel`, `uppgift`, `kod_html`, `typ`, `gdRecording`, `extra_hfil`, `extra_cfil1`, `extra_cfil2`, `extra_pdf`, `extra_xlsx`) VALUES ('$id', '$kapitelSiffra', '$ovningSiffra', '$htmlFiles', '$typ', '$gdRecording','','','','','$pdfFiles','')

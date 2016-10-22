@@ -1,0 +1,86 @@
+sub popupmenu("Mat;_mat|Underhållning;_uh|Träning;_ex|Generera Dag;_gen");
+"_ex"
+ $data = "";
+ $ExDb = "D:\Google Drive\Scriptstuff\DayOneDb\ex.txt";
+ $type = popupmenu(getkey(list, Types, $ExDb));
+ if ($type == "") {status "Avbryter";end 1};
+ $icon = getkey(icon, $type, $ExDb);
+ if (getkey(sublist, $type, $ExDb) != ""){
+	$subtype = popupmenu(getkey(sublist, $type, $ExDb));
+	};
+ if (getkey(weight, $type, $ExDb) == 1){
+	$weight = " **(" . popupmenu(getkey(list, Weights, $ExDb)) . ")**";
+	};
+ else {$weight = "";};
+ foreach ($input, getkey(input, $type, $ExDb)){
+	$data = $data . replace(gettoken($input, 2, ";"), "x", input(gettoken($input, 1, ";"))) . " ";
+	};
+ if (isset($subtype) == 1) {$type = $subtype};
+ copytext "- " . $icon . " " . $type . $weight . " " . $data;
+
+"_gen"
+ copytext "---<br><h4>" . recase(formatdate(datepicker(""),"dddd dd mmm"), "upper") . "</h4><br><h3>MAT</h3><br><br><h3>MOTION & DUKTIGHETER</h3><br><br><h3>UNDERHÅLLNING </h3>";
+ 
+"_uh"
+ $UhDb = "D:\Google Drive\Scriptstuff\DayOneDb\uh.txt";
+ $type = popupmenu("Spel|TV|Film|Comic|Podcast");
+ $prefix = getkey(prefix, $type, $UhDb);
+ if ($type == "") {status "Avbryter";end 1};
+ if ($type != "Podcast") {$sub = inputselect("Välj " . $type, formatlist(getkey(list, $type, $UhDb), eds), ,64 + 8,,400,800);};
+ if ($type == "Spel") {
+	$h = popupmenu("0|1h|2h|3h|4h|5h|6h|7h|8h|9h|10h|11h|12h");
+	if ($h == "0") {$suffix = ""};
+	else {$suffix = " **(" . $h . ")**"};
+	copytext $prefix . " " . $sub . $suffix;
+	};
+ if ($type == "TV") {
+	$lastep = getkey($sub, TVHistory, $UhDb);
+	if ($lastep != ""){$nextep = getkey($sub, TVHistory, $UhDb) + 1;};
+	else {$nextep = "S01E01";};
+	$episode = format(regexreplace(input("Avsnitt", "SXXEXX, ###", $nextep), "[a-zA-Z]+"), "0000");
+	setkey $episode, $sub, TVHistory, $UhDb;
+	$s = substr($episode, 0, 2); $e = substr($episode, -2); 
+	copytext $prefix . " " . $sub . " - S" . $s . "E" . $e;
+	};
+ if ($type == "Podcast") {
+	$Pods = inputselect("Välj podcast(ar)", formatlist(getkey(list, $type, $UhDb), eds), , 2 + 64, "stop", 400, 800, "Podcastar");
+	$Pods = replace($Pods, |, ", ");
+	copytext $prefix . " " . $Pods;
+	};
+
+"_mat"
+ perm $FoodDb = "D:\Google Drive\Scriptstuff\DayOneDb\food.txt";
+ $count = "";
+ $genlist = "";
+ $c = popupmenu("Ny;1|Kopiera;2|Lägg till;3");
+ if ($c == ""){status "Avbryter";end 1};
+ if ($c == 1){
+	$foodlist = inputselect("Välj mat", formatlist(replacelist(regexmatches(readfile($FoodDb), "\[(.*?)\]"), [|],  ,|), eds), , 2 + 64, "stop", 800, 1200, "Mat");
+	if ($foodlist == "stop"){end 1, "Avbryter";};
+	foreach($food, $foodlist){
+		$count = getkey (count, $food, $FoodDb);
+			if ($count != 0){
+				$name = "1 " . gettoken(getkey (name, $food, $FoodDb), 1, |);
+				while ($count != 1){
+					$name = $name . | . $count . " " . gettoken(getkey (name, $food, $FoodDb), 2, |);
+					$count--;
+					};
+				$name = inputselect("Välj antal", formatlist($name, eds));
+				};
+			else {$name = getkey(name, $food, $FoodDb)};
+		$genlist = $genlist . "|[" . getkey(sort, $food, $FoodDb) . "]{" . $food . "}" .  $name;
+		};
+	 perm $list = formatlist($genlist, eds);
+	 writefile("D:\Google Drive\Scriptstuff\DayOneDb\history.txt", "[" . now("yyyy-mm-dd") . "] " . $list . <crlf>, a);
+	 sub "_matcopy";
+ };
+ if ($c == 2)	{msg "ej klar";end 1;};
+ if ($c == 3)	{msg "ej klar";end 1;};
+ if ($c == "")	{end 1;};
+
+"_matcopy"
+ $icon = getkey(icon, gettoken(replacelist(regexmatches($list, "\{(.*?)\}"), "{|}", , "|"), 1, |), $FoodDb);
+ $list = regexreplace($list, "\{(.*?)\}");
+ $list = regexreplace($list, "\[(.*?)\]");
+ copytext "- " . $icon . " " . recase(replace($list, "|", ", "), sentence) . " (" . input("Tid",,now(hh:mm)) . ") **(" . input("Kalorier",,x) . " kcal)**";
+ 

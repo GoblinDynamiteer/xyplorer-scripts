@@ -1,0 +1,24 @@
+$path = "D:\Google Drive\Scriptstuff\ghostfilters";
+ $default = readfile("$path\ghost_default.txt");
+ 
+ $setfilter = popupmenu("Normal|Av|Inlagda Filmer HE;filmhe|Inlagda Filmer Rickard;filmrp|-|Lägg till");
+ 
+ if $setfilter == "Normal" {ghost("$default", 1);};
+ if $setfilter == "Av" {ghost(, 0);};
+ if $setfilter == "filmhe" {
+	$he = readfile("$path\ghost_movies_he.txt");
+	$ex = readfile("$path\ghost_movies_extra.txt");
+	ghost("$default|$he|$ex", 1);
+	};
+ if $setfilter == "filmrp" {
+	$rp = readfile("$path\ghost_movies_rp.txt");
+	ghost("$default|$rp", 1);
+	};
+ if $setfilter == "Lägg till" {
+	$he = readfile("$path\ghost_movies_rp.txt");
+	$ex = readfile("$path\ghost_movies_extra.txt");
+	$val = inputselect("Välj Ghost-filter(s) för" . <crlf> . get("SelectedItemsNames"), "ghost_default.txt|ghost_movies_extra.txt|ghost_movies_he.txt|ghost_movies_rp.txt",,2);
+	foreach($filter, $val){
+		writefile($path . "\" .$filter, "|" . get("SelectedItemsNames"), a); 
+		};
+	};

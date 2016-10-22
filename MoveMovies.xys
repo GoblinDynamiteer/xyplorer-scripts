@@ -1,0 +1,39 @@
+﻿ include CustomCommandsAndVariables;
+ perm $Folder = get("SelectedItemsPathNames");
+ sub "_SelectedCheck";
+ perm $MovieMoveScript = 1;
+ Perm $MovieLetter = replacelist(substr(replace(gettoken($Folder, -1, \), "The."), 0, 1), "v|w", "VW", |);
+ Perm $MovieFullPath = "\\drobo2\Film\" . $MovieLetter;
+ Perm $MovieName = gettoken($Folder, -1, \);
+ if (confirm("Flytta till " . $MovieFullPath . "?") == 1){
+	moveto($MovieFullPath, $Folder);
+	if (confirm("Kör NewMovies på <crlf>" . $MovieFullPath . "?") == 1){
+		perm $NoUnset = 1;
+		load NewItems_Movies;
+		};
+	if (confirm("Kör Databas-skrivning på <crlf>" . $MovieFullPath . "\" . $MovieName . "?") == 1){
+		$MovieFullPath = $MovieFullPath . "\" . $MovieName;
+		load Database_Movie_Write;
+		text getmovinfo($MovieName);
+		};
+	};
+ releaseglobals 3;
+ status "Filer flyttade!", 000000;
+
+"_SelectedCheck" 
+ if (gettoken($Folder, count, <crlf>) != 1){
+	releaseglobals 3;
+	end 1,"Fler än en mapp markerad, avbryter";
+	};
+ if (exists($Folder) != 2){
+	releaseglobals 3;
+	end 1, "Markering är inte en mapp, avbryter";
+	};
+ if (report("{ext}", listfolder($Folder)) != mkv){
+	releaseglobals 3;
+	end 1, "Markerad mapp innehåller fler än en fil, eller ingen MKV-fil. Avbryter";
+	};
+ if (regexmatches($Folder, "(1080p|720p|bluray|hddvd|x264)") == ""){
+	releaseglobals 3;
+	end 1, "Markerad mapp verkar ej vara en film, avbryter";
+	};	

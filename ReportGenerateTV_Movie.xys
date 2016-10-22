@@ -1,0 +1,139 @@
+ perm $ScriptStuff = "D:\Google Drive\Scriptstuff\";
+ sub popupmenu("Generera TV-Report (txt);_TVTXT|Generera TV-Report (htm);_TVHTM|Generera Film-Report (txt);_MOVTXT|Generera Film-Report (htm);_MOVHTM");
+
+"_TVTXT"
+ sub "_TVDATA";
+
+"_TVHTM"
+ sub "_TVDATA";
+
+ 
+"_MOVTXT"
+ sub "_CONFIRM";
+ 
+ perm $ReportName = "Movie-Report (txt)";
+ perm $Start = now("yyyy-mm-dd hh:nn:ss");
+ sub "_MOVIEDATA";
+ Perm $Template = $ScriptStuff . "report\txt_template_moviereport.txt";
+ Perm $TemplateHeader = $ScriptStuff . "report\txt_header.txt";
+ 
+ sub "_MOVGENERATE";
+ 
+ writefile($ScriptStuff . "MediaDb\report_movies.txt", replacelist(readfile($ReportFile), "date_replace|timegen_replace|count_replace", now("yyyy-mm-dd hh:nn") . | . datediff($Start, , s) . " seconds" . | . $i, |), o);
+ 
+ msg "klar!, " . $i . " filmer skrivna";
+
+ 
+"_MOVHTM"
+ 
+ sub "_CONFIRM";
+ 
+ perm $ReportName = "Movie-Report (htm)";
+ perm $Start = now("yyyy-mm-dd hh:nn:ss");
+ sub "_MOVIEDATA";
+ Perm $Template = $ScriptStuff . "report\table_template_moviereport.txt";
+ Perm $TemplateHeader = $ScriptStuff . "report\table_header.txt";
+
+ sub "_MOVGENERATE";
+ 
+ writefile($ScriptStuff . "MediaDb\report_movies.htm", replacelist(readfile($ReportFile), "date_replace|timegen_replace|count_replace", now("yyyy-mm-dd hh:nn") . | . datediff($Start, , s) . " seconds" . | . $i, |), o);
+ 
+ msg "klar!, " . $i . " filmer skrivna";
+ 
+"_TVDATA"
+ Perm $Dbfile = $ScriptStuff . "MediaDb\tv_database.txt";
+ Perm $DbfileNextAirDate = $ScriptStuff . "MediaDb\tv_nextairing.txt";
+ Perm $PosterFolder = $ScriptStuff . "MediaDb\posters";
+
+"_MOVIEDATA"
+ Perm $Dbfile = $ScriptStuff . "MediaDb\movie_database.txt";
+ Perm $PosterFolder = $ScriptStuff . "MediaDb\posters";
+ Perm $MovieLetters = listfolder("\\drobo2\Film", ,2 + 4);
+ Perm $MovieListArkivet = listfolder("\\DROBO1\Arkivet\Film", ,2 + 4);
+ perm $Subs;
+ perm $Movie;
+
+"_MOVGENERATE" 
+ perm $ReportFile = $ScriptStuff . "MediaDb\report_movies_holder.txt";
+ 
+ writefile($ReportFile, readfile($TemplateHeader) . <crlf>, o);
+ 
+ perm $MovieList = "";
+ 
+ foreach($Letter, $MovieLetters)
+	{
+		$MovieList = $MovieList . "|" . listfolder("\\drobo2\Film\" . $Letter, ,2 + 4);
+		wait 1;
+		status "Generating Movielist from folders. (" . $Letter . ")", 000000, progress;
+	};
+ perm $c = gettoken(formatlist($MovieList . "|" . $MovieListArkivet, ed), count, |);
+ perm $i = 1;
+ foreach($Movie, formatlist($MovieList . "|" . $MovieListArkivet, ed))
+	{	
+		$Code = readfile($Template);
+		$Code = replace($Code, MovieFolder, $Movie);
+		$Code = replace($Code, Resolution_replace, getkey(FrameWidth, $Movie, $Dbfile) . "x" . getkey(FrameHeight, $Movie, $Dbfile));
+		$Code = replace($Code, Path_Replace, replacelist(getkey(Path, $Movie, $Dbfile), "\\DROBO2\Film|\\DROBO1\Arkivet\Film", "Film|Film2", |));
+		
+		sub "_SUBTITLES";
+		
+		$Code = replace($Code, Subtitle_replace, $Subs);
+
+		
+		foreach($Replacer, "Title|Year|Genre|Country|Rating|IMDbID|IMDbRuntime|FileRuntime|FileSize|MovieFileName")
+			{
+				$Code = replace($Code, $Replacer . "_replace", getkey($Replacer, $Movie, $Dbfile));	
+			};
+		
+		writefile($ReportFile, $Code . <crlf>, a);
+		
+		if ($i == 200)
+			{
+				 break;
+			};
+		
+		sub "_STATUS";
+		
+		$i++;
+	};
+ 
+"_STATUS"
+ wait 1;
+ $p = round($i / $c * 100, 0);
+ status "Generating " . $ReportName .  ": item " . $i . "/" . $c . " (" . $p . "%)",  000000, progress;
+ 
+"_CONFIRM"
+ if (confirm("Kör Report?") == 0)
+	{
+		end 1==1;
+	};
+
+"_SUBTITLES"
+
+ if (getkey(SubtitleEnglish, $Movie, $Dbfile) != "")
+	{
+		$Subs = En;	
+		
+		if (getkey(SubtitleSwedish, $Movie, $Dbfile) != "")
+		{
+		
+			$Subs = "En Sv";	
+		
+		};
+		
+	};
+
+ if (getkey(SubtitleEnglish, $Movie, $Dbfile) == "")
+	{
+		$Subs = "None"; 
+		
+		if (getkey(SubtitleSwedish, $Movie, $Dbfile) != "")
+		{
+		
+		$Subs = Sv;	
+		
+		};
+		
+	};
+	
+

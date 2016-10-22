@@ -1,0 +1,25 @@
+ include CustomCommandsAndVariables;
+ $script = inputselect("Vilket script ska köras på alla mappar?", "srtcheck|setse|newitems_movies_v2|imdb_db_loader|NewItems_TV|Database_TV_Write|Database_Movie_Write|NewItems_Movies");
+ $go = confirm("Bekräfta att script "$script" ska köras.",,2);
+ if $go == "0" {
+	end 1==1;
+		};
+ focus P2;
+ $count = foldersize(, "<d>", 0); 
+ perm $StepperRunning = 1;
+ sel 1;
+ while ($i < $count) {
+	if ($script == "imdb_db_loader") {
+		global $file = "";
+		global $filedir = "";
+		};
+  StopScript();
+  status "Stepper kör. " . $i . " av " . $count . " klar. Håll in CTRL + ALT för att avbryta.", 000000, progress;wait 1;
+  load "$script";
+  sel "+1";
+  $i++;
+  }
+ unset($StepperRunning);
+ #1001; //refresh 
+ #372; //autoresize columns 
+ msg "Stepper klar!";

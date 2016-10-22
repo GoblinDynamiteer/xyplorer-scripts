@@ -1,0 +1,47 @@
+ perm $musicloc = "\\ds\AUDIO\Music\Albums\";
+ if (quicksearch("*.mp3",,|) != ""){perm $ext = "mp3";};
+ elseif (quicksearch("*.flac",,|) != ""){perm $ext = "flac";};
+ else {releaseglobals 3;end 1; "Inga musikfiler funna! Avbryter";};
+ sub "_info"; 
+ sub "_move";
+ focus P1; goto $moveto;
+ releaseglobals 3;
+
+"_info"
+ perm $files = quicksearch("*." . $ext,,|);
+ perm $artist = property("System.Music.Artist", gettoken($files, 1, |));
+ perm $year = property("System.Media.Year", gettoken($files, 1, |));
+ perm $album = property("System.Music.AlbumTitle", gettoken($files, 1, |));
+ perm $album = property("System.Music.AlbumTitle", gettoken($files, 1, |));
+ 
+ if (property("System.Music.AlbumArtist", gettoken($files, 1, |)) == "Various Artists"){
+	perm $destination = "\\ds\AUDIO\Music\Various Artists Compilations\" . $album . " (" . $year . ") ". recase($ext, upper);
+	};
+ else{
+	perm $destination = $musicloc . recase(substr($artist, 0, 1), upper) . "\" . $artist . "\" . $artist . " - " . $album . " (" . $year . ") " . recase($ext, upper);
+	};
+ perm $song;
+
+ foreach($song, $files){
+    perm $artist = property("System.Music.Artist", $song);
+	perm $title = property("System.Title", $song);
+	perm $track = property("System.Music.TrackNumber", $song);
+	if (property("System.Music.PartOfSet", $song) == "1/2"){$track = "1" . format($track, 00)};;
+	if (property("System.Music.PartOfSet", $song) == "2/2"){$track = "2" . format($track, 00)};;
+	sub "_renamer";
+	};
+ 
+"_renamer"
+ $string = replace(recase(format($track, 00) . - . $artist . - . $title, lower), " ", "_");
+ $string = replacelist($string, "\|å|ä|ö|'|ñ|:|/|*", "-|a|a|o||n|-|x",|);
+ renameitem($string, $song, 1);
+
+"_move"
+ perm $moveto = new(replacelist($destination, ":|;"," -| -",|), dir);
+ $files = quicksearch("*." . $ext,,|);
+ moveto $moveto, $files;
+ /*foreach($file, $files){
+	moveto $moveto, $file;
+	status "Flyttar fil: " . gettoken($file, -1, \) . " >> " . $moveto, 00000, progress;wait 100;
+	};
+ */

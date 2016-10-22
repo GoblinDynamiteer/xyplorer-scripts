@@ -1,0 +1,11 @@
+ include CustomCommandsAndVariables;
+ $Location = inputfolder("D:\Downloads", "Leta efter Rar-filer");
+ $Output = inputfolder("D:\Temp\temprar", "Välj vart filer ska packas upp");
+ $Counter = 1;
+ $Files = quicksearch("*.rar", $Location, |);
+ foreach($rar, $Files){
+	unrar($rar, $Output);
+	status "Extracting file: " . gettoken($rar, -1, \) . " (" . $Counter . " of " . gettoken($rar, count, |) . ")", 000000, progress;
+	wait 1;
+	$Counter++;
+	};

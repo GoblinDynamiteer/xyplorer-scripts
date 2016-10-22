@@ -1,0 +1,29 @@
+ global $tick;
+ 
+ //1 sekund = 10000000 t
+ //srt format 00:00:34,853 --> 00:00:36,939
+ //avrundning round(172.7368, 3);  //172.737
+
+ $m = 0;
+ $h = 0;
+ $s = $tick / 10000000;
+ 
+ $s = round($s, 3);
+ 
+ if $s >= 60
+	{
+	$m = "60";
+	while $s >= $m
+		{	
+			$m = $m + 60;
+		};
+	$m = ($m-60) / 60;
+	$s = round($s - $m * 60, 3);
+	};
+ 
+ if strlen("$m") != "2" {$m = "0$m";};
+ if strlen("$h") != "2" {$h = "0$h";};
+ if strlen("$s") != "2" {$s = "0$s";};
+ 
+ global $formatedtime = "$h:$m:$s";
+ // echo $formatedtime;

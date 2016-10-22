@@ -1,0 +1,98 @@
+
+ sub "_ClipboardAndSelectionCheck";
+ include CustomCommandsAndVariables; 
+ NoDbFolder();
+ Perm $MovieList = listfolder($MovieFullPath, , 2 + 4, |);
+ Perm $MovieListHash= hash(, $MovieList);
+ Perm $MovieCount = gettoken($MovieList, count, |);
+ perm $DeletedFilesText = "";
+ 
+ unset $NewScript; //Variabel som tvingar knapp för databas-skriv att välja mellan TV/Film, om den är unset så görs val beroende på markerad mapp.
+ 
+ sub "_NewMovieAdder";
+ sub "_WriteToDatabase";
+ 
+"_WriteToDatabase"
+ 
+ setmovlist($MovieCount, MovieCount);
+ setmovlist($MovieList, MovieList);
+ setmovlist($MovieListHash, MovieListHash);
+ 
+ if ($NoUnset != 1){
+	releaseglobals 3;
+	};
+ 
+"_NewMovieAdder"
+ Perm $NewFound = "";
+
+ $CheckList = getmovlist(MovieList);
+	if ($MovieListHash != getmovlist(MovieListHash)){
+		Perm $MovieListOldSorted = sort($CheckList);
+		perm $MovieListNewSorted = $MovieList;
+		foreach($Movie, $MovieList){
+			wait 1;
+			status "Checking if new: " . $Movie,  000000, progress;
+			if (gettokenindex($Movie, $CheckList) == 0){
+				if $MovieLetter == "Film"	{writefile($RecentlyAddedMov, now("yyyy-mm-dd") . " (Film2) " . $Movie . <crlf>, a);};
+				else 						{writefile($RecentlyAddedMov, now("yyyy-mm-dd") . " (" . $MovieLetter . ") " . $Movie . <crlf>, a);};
+				$MovieListNewSorted = sort(replace($MovieListNewSorted, $Movie));
+				setmovlist($Movie, LastAdded);
+				setmovlist(now("yyyy-mm-dd"), LastAddedDate);
+				setmov(now("yyyy-mm-dd"), DateAdded, $Movie);
+				$NewFound = $NewFound . "<br>" . $Movie . ;
+				};
+			};
+
+		if ($NewFound != ""){
+			sub "_CheckDeletedFiles";
+			msg "Nya filmer hittade:" . $NewFound . "<br>Lägger till i recently_added och uppdaterar databas." . $DeletedFilesText;	
+			updateinfo()
+			};
+				
+		if ($NewFound == ""){
+			sub "_CheckDeletedFiles";
+			msg "Inga nya filmer hittade<br>Uppdaterar databas." . $DeletedFilesText;	
+			updateinfo()
+			};
+		};
+
+	else {
+		msg "Inga nya filmer hittade!";
+		};
+
+"_ClipboardAndSelectionCheck"
+
+ Perm $MovieFullPath = isset($MovieFullPath) ? $MovieFullPath : get("SelectedItemsPathNames");
+ Perm $MovieLetter = isset($MovieLetter) ? $MovieLetter : get("SelectedItemsNames");
+ 
+ if (gettoken($MovieFullPath, count, <crlf>) > 1){
+	releaseglobals 3;
+	end 1, "Fler än en markerad fil/mapp, avbryter script";
+	};
+ 
+ if (regexmatches($MovieFullPath, "(drobo2.film|drobo1.arkivet.film|ds.film)") == ""){
+	releaseglobals 3;
+	end 1,"Avbryter, fel mapp för script.";
+	};
+	
+ if (gettokenindex(gettoken($MovieFullPath, -1, "\"), "#|A|Anime|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|VW|X|Y|Z|Film", |) == ""){
+	releaseglobals 3;
+	end 1, "Avbryter, fel mapp för script.";
+	};
+	
+	
+
+"_CheckDeletedFiles" 
+
+ if (hash(,$MovieListOldSorted) != hash(,$MovieListNewSorted)){
+	$DeletedFound = "";
+	foreach($CheckDeleted, getmovlist(MovieList)){
+		wait 1;
+		status "Checking if deleted: " . $CheckDeleted . $DeletedFound,  000000, progress;
+			if (exists($MovieFullPath . "\" . $CheckDeleted) == 0){
+				writefile($DeletedItemsTXT, now("yyyy-mm-dd") . " [Film] (" . $MovieLetter . ") " . $CheckDeleted . <crlf>, a);
+				$DeletedFound = " | Gone: " . $CheckDeleted;
+				perm $DeletedFilesText = "<br>Hittade borttagna filer, har lagt till i deleted_items!";
+				};
+		};
+ };

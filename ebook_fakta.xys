@@ -1,0 +1,43 @@
+"eBookMover"
+ if (get("curitem", "ext") == "pdf") || (get("curitem", "ext") == "epub")
+	{
+	$file = get("SelectedItemsPathNames", "|");
+	$path = get("curitem", "path");
+	
+	if (exists(get("curitem", "path") . "\metadata.opf") == 0) 
+		{
+			if (confirm("No Calibre Metadata file found (metadata.opf), try to find latest Calibre eBook folder?", "", , 4) == 1)
+			{
+				sub "_CalibreFind";
+			};
+		};
+	
+	else 
+		{
+		$title = replacelist(regexmatches(readfile(get("curitem", "path") . "\metadata.opf"), "<dc:title>(.*?)\<"), "<dc:title>|<|:|&amp;", "|| -|&", "|");
+		$author = replacelist(regexmatches(readfile(get("curitem", "path") . "\metadata.opf"), ">(.*?)<\/dc:creator>", ", "), "</dc:creator>|>", "|", "|");
+		$date = replace(regexmatches(readfile(get("curitem", "path") . "\metadata.opf"), "<dc:date>\d{4}-\d{2}"), "<dc:date>", "");
+	
+		$dest = inputfolder("\\ds\DOCEDU\Books Nonfiction\", "Choose destination");
+	
+		copyitem "$file", $dest . "\" . $title . " (". $author . ") [" . $date . "]." . get("curitem", "ext");
+		
+		focus P2; goto $dest; filter $title, 8; #372; //autoresize columns 
+		};
+	
+	};
+ else
+	{
+		if (confirm("No PDF/EPUB Selected, try to find latest Calibre eBook folder?", "", , 4) == 1)
+			{
+				sub "_CalibreFind";
+			};
+	};
+	
+	
+	
+	//Beginning Programming With Python for Dummies (John Paul Mueller) [2014-09].pdf
+
+"_CalibreFind"
+ focus P2;
+ goto "D:\Calibre eBooks\" . gettoken(gettoken(formatlist(report("{Created yyyy-mm-dd hh:nn},{Name}|", listfolder("D:\Calibre eBooks", ,2)), "eds"), -1, "|"), -1, ",");

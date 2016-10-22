@@ -1,0 +1,28 @@
+﻿$path = "D:\Google Drive\Scriptstuff\scans";
+ $typ = inputselect("Affär/betalningsmottagare", formatlist(readfile("$path\items.txt"), "eds", "|"),,4,"cancel","400","40%");
+ 
+ if $typ == " -ny-" { 
+ 
+	$typ = input("Ange ny");
+	$typ = recase("$typ", "lower");
+	
+	writefile("$path\items.txt", "|$typ", "a");
+	
+ };
+ 
+ $date = formatdate(datepicker(""),"yyyy-mm-dd");
+ 
+ $folder = formatdate("$date","yyyy-mm");
+ 
+ $kr = input("Antal kronor");
+ 
+ $kr = "$kr kr";
+ $kr = replace("$kr", " ", "");
+ 
+ $ext = inputselect("pdf/gif", "pdf|gif",,4,"cancel","400","40%");
+ 
+ copytext "D:\Google Drive\Misc\Pengar\kvitton\$folder\$date-$typ-$kr.$ext";
+ 
+ msg "Clipboard: <br><clipboard><br><br><br>Tryck OK för Excel-clipboard.";
+ 
+ copytext "Pengar\kvitton\$folder\$date-$typ-$kr.$ext";

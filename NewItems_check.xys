@@ -1,0 +1,29 @@
+
+ if ($NewScript == "TV"){
+	load NewItems_TV;
+ };
+
+ if ($NewScript == "Film"){
+	load NewItems_Movies;
+ };  
+
+ else {
+	sub "_Check2";
+ };
+  
+"_Check2"
+  $FullPath = get("SelectedItemsPathNames");
+  if  (regexmatches($FullPath, "ds.film") != "")
+  {
+    load NewItems_Movies;
+    break;
+  };
+ $FullPath = isset($ShowFullPath) ? $ShowFullPath : get("SelectedItemsPathNames");
+ if (regexmatches($FullPath, "ds.tv") != ""){
+	load NewItems_TV;
+	break;
+ };
+
+  else {
+	end 1==1;
+	};

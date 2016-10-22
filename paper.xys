@@ -1,0 +1,166 @@
+"Paper: TV - Allt"
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ sub "_ListTV";
+ writefile($PaperLocation . "tv.txt", $TVListing);
+ focus P2;
+ goto "paper:tv";
+ status "Klar!", 000000, ready;
+ 
+"Paper: TV - Genre" 
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ sub "_ListTV";
+ $GenreList = "";
+ $PaperAdd = "";
+ status "Genererar Genre-lista från Databas", 000000, progress;
+ foreach($ShowName, replace($TVListing, "<crlf>", "|")){
+	$GenreList = $GenreList . "|" . replace(getkey(Genre, gettoken($ShowName, -1, "\"), $TVDb), ", ", "|");
+	StopScript();
+	};
+ status "Välj Genre!", 000000, progress;
+ $GenreSelect = popupmenu(formatlist($GenreList, eds));
+ foreach($ShowName, replace($TVListing, "<crlf>", "|")){
+	if (regexmatches(getkey(Genre, gettoken($ShowName, -1, "\"), $TVDb), $GenreSelect) != ""){
+		$PaperAdd = $PaperAdd . getkey(Path, gettoken($ShowName, -1, "\"), $TVDb) . "<crlf>";
+		};
+	};
+ writefile($PaperLocation . "tv.txt", $PaperAdd);
+ focus P2;
+ goto "paper:tv";
+ status "Klar!", 000000, ready;
+ 
+"Paper: TV - Nya avsnitt ute!" 
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ $PaperAdd = "";
+ foreach($ShowName, replace($TVListing, "<crlf>", "|")){
+	wait 1;
+	status "Kollar om det finns nya avsnitt för: " . $ShowName, 000000, progress;
+	if (regexmatches(getkey(NextEpisode, gettoken($ShowName, -1, "\"), $NextDb), "\d{4}-\d{2}-\d{2}") != ""){
+		if (datediff(regexmatches(getkey(NextEpisode, gettoken($ShowName, -1, "\"), $NextDb), "\d{4}-\d{2}-\d{2}")) > 0){
+			$PaperAdd = $PaperAdd . getkey(Path, gettoken($ShowName, -1, "\"), $TVDb) . "<crlf>";	
+			};
+		};
+	};
+ writefile($PaperLocation . "tv.txt", $PaperAdd);
+ focus P2;
+ goto "paper:tv";
+ status "Klar!", 000000, ready;
+ 
+"TV: Hitta borttagna serier" 
+ include CustomCommandsAndVariables;
+ $DeletedShows = "";
+ $ShowsInDb = regexmatches(readfile($TVDb), "\[.+]", |);
+ foreach($ShowName, $ShowsInDb){
+	$ShowName = replacelist($ShowName, [|], ,|);
+	if (gettv(Deleted, $ShowName) != 1){
+		if (getshowinfo($ShowName) != ""){
+			status "Söker efter borttagna serier:" . $ShowName, 000000, progress;wait 1;
+			if (exists(gettv(Path, $ShowName)) == 0){
+				$DeletedShows = sort($DeletedShows . "|+" . $ShowName);
+				};
+			};
+		};
+	};
+ if ($DeletedShows == "") {end 1, "Inga raderade serier hittades."};
+ $Selected = inputselect("Hittade borrtagna serier! Välj vilka som ska flaggas som borttagna", $DeletedShows, , 2 + 8, ,1000);
+ foreach ($ShowName, $Selected){
+	settv(1, Deleted, $ShowName);
+	writefile($DeletedItemsTXT, now("yyyy-mm-dd") . " [Full Show] " . $ShowName . <crlf>, a);
+	};
+
+"Paper: Film - Lista alla filmer"
+ $MovieListing = "";
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ foreach($MovieFolder, $MoviePaths){
+	$MovieListing = $MovieListing . <crlf> . listfolder($MovieFolder, , ,<crlf>);
+	status "Listar filmer i " . $MovieFolder, 000000, progress;
+	StopScript();
+	wait 1;
+	};
+ writefile($PaperLocation . "film.txt", sort($MovieListing));
+ focus P2;
+ goto "paper:film";
+ status "Klar!", 000000, ready;
+
+"Paper: Film - År (och senare)"
+ $MovieListing = "";
+ include CustomCommandsAndVariables;
+ $YearInput = input("Ange Årtal");
+ sub "_Locations";
+ foreach($MovieFolder, $MoviePaths){
+	foreach($Movie, listfolder($MovieFolder, ,6)){
+			if (getmov(Year, $Movie) >= $YearInput){
+				$MovieListing = $MovieListing . <crlf> . $MovieFolder . "\" . $Movie;
+				};
+			status "Listar filmer med årtal efter " . $YearInput, 000000, progress;
+		};
+	};
+ writefile($PaperLocation . "film.txt", sort($MovieListing));
+ focus P2;
+ goto "paper:film";
+ status "Klar!", 000000, ready;
+
+"Paper: Film - Saknar Data"
+ $MovieListing = "";
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ foreach($MovieFolder, $MoviePaths){
+	foreach($Movie, listfolder($MovieFolder, ,6)){
+			if (getmov(Title, $Movie) == ""){
+				$MovieListing = $MovieListing . <crlf> . $MovieFolder . "\" . $Movie;
+				};
+			StopScript();
+			status "Listar filmer utan data i databasen (" . $Movie . ")", 000000, progress;
+			wait 1;
+		};
+	};
+ writefile($PaperLocation . "film.txt", sort($MovieListing));
+ focus P2;
+ goto "paper:film"; 
+ status "Klar!", 000000, ready;
+ 
+"Paper: Film - Genre"
+ end 1, "Ej Byggd"; 
+
+"Film: Lista Db-key och Hitta fel"
+ include CustomCommandsAndVariables;
+ sub "_Locations";
+ $Holder = "";
+ $Choice = popupmenu("Title|Year|Genre|Country|Rating|IMDbID|Actors|MovieFileName|SubtitleEnglish|SubtitleSwedish|FrameWidth|FrameHeight|IMDbRuntime|FileSize|FileRuntime|Path");
+ foreach($MovieFolder, $MoviePaths){
+	foreach($Movie, listfolder($MovieFolder, ,6)){
+			$Holder = $Holder . $Movie . " " . $Choice . ": " . getmov($Choice, $Movie) . <crlf>;
+			status "Listar " . $Choice . " (" . $Movie . ")", 000000, progress;wait 1;
+			StopScript();
+		};
+	};
+ text $Holder;
+ if (confirm("Försök hitta fel i databas?",,2,4) == 1){
+	$Error = "";
+	foreach($Line, $Holder, <crlf>){
+		$Movie = gettoken($Line, 1, " " . $Choice . ": ");
+		$DbKey = gettoken($Line, 2, " " . $Choice . ": ");
+		if ($Choice == "Path"){$Header = "Fel Path, ske ej inehålla filmens mapp.";if (strpos($Line, "\" . $Movie) != -1){$Error = $Error . $Line . <crlf>;};};
+		if ($Choice == "FileRuntime"){$Header = "Runtime inte satt.";if ($DbKey == 0){$Error = $Error . $Line . <crlf>;};};
+		if ($Choice == "MovieFileName"){$Header = "Fler än en fil listad i MovieFileName.";if (gettoken($DbKey, count, |) > 1){$Error = $Error . $Line . <crlf>;};};
+		if ($Choice == "FileSize"){$Header = "Fel Filesize.";if (strlen($DbKey) > 9){$Error = $Error . $Line . <crlf>;};};
+		status "Letar efter fel i " . $Choice . " (" . $Movie . ")", 000000, progress;wait 1;
+		StopScript();
+		};
+ status "Klar!", 000000, ready;
+ text $Header . <crlf><crlf> . $Error; 
+	};
+
+"_Locations";
+ perm $TVListing = listfolder("\\ds\TV", , , "<crlf>");
+ perm $MoviePaths = listfolder("\\ds\FILM");
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+ //include CustomCommandsAndVariables;
+ $RegexLine = "^....[^-]+-+\s+\d{1,2}\sjk\s+jk\s+\d{1,}\s";
+ $RegexTime = "\s{1,2}\d{1,2}:\d{2}:\d{2}";
+ $RegexDate = "^...\s{1,2}\d{1,2}\s\d{4}";
+ $WSCPGet = "D:\Temp\winscp\scripts\whatbox-get.txt";
+ $DLF = inputfolder("D:\Downloads\TEMPTV") . "\";
+ $FormattedText = "";
+ status "Waiting for WinSCP to list files", 000000, progress;
+ $Files = regexreplace(runret("D:\Temp\winscp\winscp.com /script=D:\Temp\winscp\scripts\whatbox.txt"), $RegexLine);
+ $Files = regexreplace($Files, $RegexTime);
+ status "Done!", 000000, progress;
+ foreach($Line, $Files, <crlf>){
+	if (regexmatches($Line, $RegexDate) != "") {
+		$FormattedText = $FormattedText . <crlf> . regexreplace($Line, $RegexDate, formatdate(replacelist(regexmatches($Line, $RegexDate), "may|oct", "maj|okt", "|"), "yyyy-mm-dd"));
+		};
+	};
+
+ $Choice = inputselect("Filer att ladda ner från FTP", regexreplace(formatlist($FormattedText, edr, <crlf>), "\d{4}-\d{2}-\d{2}\s"), <crlf>, 10, "Cancel", 600, 1000, "Filer att ladda ner från FTP");
+
+ foreach($Download, $Choice, <crlf>){
+	new ($DLF . $Download, dir);
+	writefile($WSCPGet, readfile("D:\Google Drive\Scriptstuff\winscp\open.txt") . <crlf> . "get " .  "/home/jk/files/" . $Download . '/* "' . $DLF . $Download . '"\"' . <crlf> . "exit", o);
+	run("D:\Temp\winscp\winscp.com /script=" . $WSCPGet);
+	status "Starting WinSCP Transfer", 000000, progress;
+	wait 3000;
+	};
+ 
+ /*
+ open sftp://jk:1pSWujex0nr6@odyssey.whatbox.ca/ -hostkey="ssh-ed25519 256 ac:e2:60:68:74:91:66:bb:f2:5d:28:9d:52:32:09:f9"
+ get /home/jk/files/Warcraft.2016.1080p.WEB-DL.AAC2.0.H264-FGT/* "D:\USENET Extracts\Warcraft.2016.1080p.WEB-DL.AAC2.0.H264-FGT\"
+ exit

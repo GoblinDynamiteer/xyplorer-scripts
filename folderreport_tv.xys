@@ -1,0 +1,58 @@
+$nf = confirm("Generera TV Report?", "<br>", 2, 4); //1: OK/Cancel; returns 1/0
+ if $nf == "1" 
+	{
+ 
+ $timestart = now();
+ $tv2 = folderreport("dirs", "r", "\\DROBO1\Arkivet\TV Blandat\", , , "|");
+ $tv1 = folderreport("dirs", "r", "\\DROBO2\TV\", , , "|");
+ $tva = folderreport("dirs", "r", "\\DROBO1\Anime\", , , "|");
+ $i = "1";
+ $report = "";
+ $line = "-----------------------------------------";
+
+ $tvlist = formatlist(report("{name}:{Fullpath}<crlf>", "$tv1|$tv2|$tva"), "eds", "<crlf>");
+ 
+ //
+ 
+ while $i < gettoken("$tvlist", "count", "<crlf>") 
+	{
+		
+		$show = gettoken(gettoken("$tvlist", "$i", "<crlf>"), "1", ":");
+		
+		//step;
+		$showlocation = gettoken(gettoken("$tvlist", "$i", "<crlf>"), "2", ":");
+		
+			if $showlocation == "\\DROBO1\Arkivet\TV Blandat" {$location = "TV2";};
+			if $showlocation == "\\DROBO2\TV" {$location = "TV";};
+			if $showlocation == "\\DROBO1\Anime" {$location = "TV Anime";};
+			
+		$size = foldersize("$showlocation\$show", "(<f> files, <b>)");
+		
+		$showinfo = readfile("D:\Google Drive\Scriptstuff\imdb_info\tv\$show.txt");
+		
+		$genre = gettoken("$showinfo", "1", "|");
+		$year = gettoken("$showinfo", "2", "|");
+		$localepisode = gettoken("$showinfo", "3", "|");
+		$imdbid = gettoken("$showinfo", "4", "|");
+		$imdbnext = gettoken("$showinfo", "5", "|");
+		
+		$report = "$report<crlf>$line<crlf>$show ($year)<crlf>$line<crlf>$genre<crlf>http://www.imdb.com/title/$imdbid/<crlf>Location: $location $size<crlf>Latest Local Episode: $localepisode<crlf>IMDb Next Episode: $imdbnext<crlf><crlf>";
+		
+		$i++;
+	};
+ 
+ $countshows = gettoken("$tvlist", "count", "<crlf>");
+ 
+ $timetogenerate = datediff("$timestart", , "s");
+ 
+ $header = "TV-Shows Listing<crlf>Updated <date yyyy-mm-dd hh:nn><crlf>Generated in $timetogenerate seconds<crlf>$countshows TV-Shows listed.<crlf><crlf>";
+
+ writefile ("D:\Google Drive\Scriptstuff\imdb_info\tv_listing.txt", "$header$report");
+ };
+	
+ msg "Report klar. Tog $timetogenerate s";
+ 	
+ if $nf == "0" 
+	{
+	end 1==1;
+	};

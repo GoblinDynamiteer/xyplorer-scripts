@@ -1,0 +1,139 @@
+ include CustomCommandsAndVariables;
+ sub "_ClipboardAndSelectionCheck";
+ Perm $SeasonList = listfolder($ShowFullPath, , 2 + 4, |);
+ Perm $SeasonCount = gettoken($SeasonList, count, |);
+ Perm $EpisodeList = "";
+ perm $DeletedFilesText = "";
+ $HashCheckFlag = 0;
+ unset $NewScript;
+ if (getshowinfo($ShowName) == ""){
+	$ChoiceNewShow = confirm("Hittar ej TV-Serie [" . $ShowName . "] i databasen, är det en ny serie?<br><br>JA: Lägger till alla avsnitt i RecentlyAdded<br>NEJ: Skriver enbart seriens data till databasen.<br>Cancel avbryter",,,3); //3: YES/NO/CANCEL - RETURNS 1/0/2
+	if ($ChoiceNewShow == 1){
+		sub "_NewShowAdder";
+		sub "_WriteToDatabase";
+		updateinfo();
+		msg "Lägger till som ny serie!";
+		releaseglobals 3;
+		end 1==1;
+		};
+	if ($ChoiceNewShow == 0){
+		sub "_WriteToDatabase";
+		releaseglobals 3;
+		end 1==1;
+		};
+	if ($ChoiceNewShow == 2){
+		releaseglobals 3;
+		end 1==1;
+		};
+ };
+ perm $EpisodesOldSorted = "";
+ perm $EpisodesNewSorted = "";
+ foreach($Season, $SeasonList){
+	$EpisodeList = vid_nopath($ShowFullPath . "\" . $Season);
+	if (compare(gettv("HashList_" . $Season, $ShowName), hash(,sort($EpisodeList))) != 0){
+		$HashCheckFlag = 1;
+		$DbEpisodes = gettv("Episodes_" . $Season, $ShowName);
+		$EpisodesOldSorted = $EpisodesOldSorted . "|" . $DbEpisodes;
+		$EpisodesNewSorted = $EpisodesNewSorted . "|" . $EpisodeList;
+		foreach($Episode, sort($EpisodeList)){
+			wait 1;status "Letar efter ny avsnitt i: " . $ShowName . "\" . $Season, 000000, progress;
+			if (gettokenindex($Episode, $DbEpisodes) == 0){
+				writefile($RecentlyAddedTXT, now("yyyy-mm-dd") . " (" . $ShowName . ") " . $Episode . <crlf>, a);
+				$EpisodesNewSorted = replace($EpisodesNewSorted, $Episode);
+				$HashCheckFlag = 2;
+				};
+			};
+		};
+ $EpisodeList = "";
+ };
+ if ($HashCheckFlag == 0) {
+	settv($ShowFullPath, Path, $ShowName);
+	releaseglobals 3;
+	end 1,"Inga nya avsnitt, inga borttagna filer!";
+	};
+ if ($HashCheckFlag == 1) {
+	sub "_CheckDeletedFiles";
+	sub "_WriteToDatabase";
+	updateinfo();
+	msg "Fel hash, men inga ny avsnitt. Uppdaterar Databasen." . $DeletedFilesText;
+	releaseglobals 3;
+	end 1;
+	};
+ if ($HashCheckFlag == 2) {
+	sub "_CheckDeletedFiles";
+	sub "_WriteToDatabase";
+	updateinfo();
+	if confirm("Nya avsnitt hittade, tillagda till recently_added_tv.txt. Databasen uppdaterad." $DeletedFilesText . "<br>Kör IMDB-Script på: <br>". $ShowFullPath . "?") == 1{
+		load Database_TV_Write;
+		};
+	if ($TVMoveScript != 1){
+		releaseglobals 3;
+		};
+ };
+
+"_WriteToDatabase"
+ settv($SeasonCount, SeasonCount, $ShowName);
+ settv($SeasonList, SeasonList, $ShowName);
+ settv($ShowFullPath, Path, $ShowName);
+ foreach($Season, $SeasonList){
+	$EpisodeList = sort(vid_nopath($ShowFullPath . "\" . $Season));
+	settv(hash(,$EpisodeList), "HashList_" . $Season, $ShowName);
+	settv($EpisodeList, "Episodes_" . $Season, $ShowName);
+	};
+ if ($EpisodesOldSorted == 1){
+	settv("", "Episodes_S00" . $Season, $ShowName);
+	settv("", "HashList_S00" . $Season, $ShowName);
+	};
+	
+ 
+"_NewShowAdder"
+ $NewShowAddOnce = "(New Show!)";
+ settv(now("yyyy-mm-dd"), DateAdded, $ShowName);
+ foreach($Season, $SeasonList){
+	$EpisodeList = vid_nopath($ShowFullPath . "\" . $Season);
+	foreach($Episode, sort($EpisodeList)){
+		if ($NewShowAddOnce != 0){writefile($RecentlyAddedTXT, now("yyyy-mm-dd") . " (" . $ShowName . ") " . $Episode . " " . $NewShowAddOnce . <crlf>, a);};
+		if ($NewShowAddOnce == 0){writefile($RecentlyAddedTXT, now("yyyy-mm-dd") . " (" . $ShowName . ") " . $Episode . <crlf>, a);};
+		$NewShowAddOnce = 0;
+		};
+ };
+
+"_ClipboardAndSelectionCheck"
+ Perm $ShowFullPath = isset($ShowFullPath) ? $ShowFullPath : get("SelectedItemsPathNames");
+ Perm $ShowName = isset($ShowName) ? $ShowName : get("SelectedItemsNames");
+ if (gettoken($ShowFullPath, count, <crlf>) > 1){
+	releaseglobals 3;
+	end 1,"Fler än 1 markerad fil/mapp, avbryter script";
+	};
+ if (regexmatches($ShowFullPath, "ds.TV") == ""){
+	releaseglobals 3;
+	end 1, "Ej i \\ds\tv";
+	};
+ if (exists($ShowFullPath) == 1){
+	releaseglobals 3;
+	end 1, "En fil är markerad! Avbryter Script";
+	};
+	
+"_CheckDeletedFiles"
+ $FileList = "";
+ $i = 1;
+ if (gettv("Episodes_S00") != ""){
+	if (exists($ShowFullPath . "\S00") == 0){
+		$i = 0;
+		$EpisodesOldSorted = 1;
+		};
+	};
+ if (hash(,sort($EpisodesOldSorted)) != hash(,sort($EpisodesNewSorted))){
+	while (gettv("Episodes_S" . format($i, 00), $ShowName) != "") {
+		foreach($CheckDeleted, gettv("Episodes_S" . format($i, 00), $ShowName)){
+			wait 1;status "Kollar om fil är borttagen: " . $CheckDeleted, 000000, progress;
+			if (exists($ShowFullPath . "\S" . format($i, 00) . "\" . $CheckDeleted) == 0){
+				writefile($DeletedItemsTXT, now("yyyy-mm-dd") . " [TV] (" . $ShowName . ") " . $CheckDeleted . <crlf>, a);
+				$FoundFlag = 1;
+				$FileList = $FileList . "<br>" . $CheckDeleted;
+				};
+			};
+		$i++;
+		};
+	if ($FoundFlag == 1) {perm $DeletedFilesText = "<br>Hittade borttagna filer, har lagt till i deleted_items!" . $FileList;};	
+ };

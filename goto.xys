@@ -1,0 +1,143 @@
+ include CustomCommandsAndVariables;
+ $PointerPosAtStart = itematpos();
+ $TV = "TV: Senaste Säsong. Clipboard: Sökväg.";
+ $TVFZ = "TV: Senaste Säsong. Clipboard: Sökväg. Starta FileZilla";
+ $FILM = "Film: Gå till Bokstav. Clipboard: Sökväg";
+ $FILMFZ = "Film: Gå till Bokstav. Clipboard: Sökväg. Starta FileZilla";
+ $SCRIPTF = "Script: XYPlorer Script-mapp";
+ $SCRIPTO = "Script: Öppna Script";
+ $SCRIPTH = "Script: Xyplorer hjälpfil";
+ $WEBLINK = "Web: Öppna Länk";
+ $WEBLINKADD = "Web: Lägg Till Länk";
+ $APPSTART = "App: Starta Program";
+ $APPFOLDER = "App: !!Program-Mapp, FIXA!";
+ $TVNEW = "!!TV: Kör NewTV på Serie!";
+ $FILMNEW = "!!TV: Kör NewFilm på Bokstav!";
+ $BACKUP = "Script: Backup";
+ $PAPERFOLDERS = "Script: Paper";
+ $LFILTER = "LiveFilter";
+ if ($PointerPosAtStart != "") {
+	if (exists($PointerPosAtStart) == 2){
+	$FZTOPOS = "|-|Filezilla hit;FZP";
+	$MP3TOPOS = "|Mp3tag hit;MPT";
+	};
+ else {
+	$FZTOPOS = "";
+	$MP3TOPOS = "";
+	};
+ $Goto = popupmenu("$TV|$TVFZ|$FILM|$FILMFZ|-|$LFILTER|-|$SCRIPTF|$SCRIPTO|$SCRIPTH|-|$WEBLINK|$WEBLINKADD|-|$APPSTART|$APPFOLDER|$TVNEW|$FILMNEW|-|$BACKUP|$PAPERFOLDERS" . $FZTOPOS . $MP3TOPOS);
+ 
+ if ($Goto == MPT){
+	run '"C:\Program Files (x86)\Mp3tag\Mp3tag.exe" /fp:"' . $PointerPosAtStart . '"';
+	};
+	
+ if ($Goto == FZP){
+	copytext $PointerPosAtStart;
+	sub "_FileZilla";
+	};
+ 
+ if ($Goto == $BACKUP){
+	load backup;
+	};
+	
+ if ($Goto == $PAPERFOLDERS){
+	load paper;
+	};	
+	
+ if ($Goto == $TV){
+	sub "_TV";
+	};
+ 
+ if ($Goto == $APPSTART){
+	sub "_APPSTART";
+	};
+ 
+ if ($Goto == $FILM){
+	sub "_FILM";
+	};
+	
+ if ($Goto == $FILMFZ){
+	sub "_FILM";
+	sub "_FileZilla";
+	};
+ 
+ if ($Goto == $TVFZ){
+	sub "_TV";
+	sub "_FileZilla";
+	};
+	
+ if ($Goto == $SCRIPTF){
+	focus P2;
+	goto "C:\Users\kampe_000\AppData\Roaming\XYplorer\Scripts";
+	};
+
+ if ($Goto == $SCRIPTO){
+	load openscript;
+	};
+
+ if ($Goto == $WEBLINK){
+	sub "_WEBLINK";
+	};
+	
+ if ($Goto == $WEBLINKADD){
+	sub "_WEBLINKADD";
+	};
+
+ if ($Goto == $SCRIPTH){	 
+	rtfm "idh_scripting_comref.htm#idh_sc_" . inputselect("Script", formatlist(readfile("D:\Google Drive\Scriptstuff\xyplorer_commands\scriptlist.txt"), eds),,64+8,,200,800);
+	};
+
+ if ($Goto == $LFILTER){	 
+	filter input("Filter",,get("livefilter")), 8;
+	};
+
+"_FILM"
+	Perm $MovieLetter = inputselect("Filmer", listfolder("\\drobo2\Film", , 2 + 4), , 72, ,"200", "800", "Välj bokstav!");
+	Perm $MovieFullPath = "\\drobo2\Film\" . $MovieLetter;
+	Perm $NewScript = "Film";
+	focus P2;
+	goto "\\drobo2\Film\" . $MovieLetter;
+	copytext "\\drobo2\Film\" . $MovieLetter;
+
+"_TV"
+ $show = inputselect("Serier", listfolder("\\ds\tv",, 2) . listfolder("\\ds\MISC\Temporary TV\Reality TV",, 2) . listfolder("\\ds\MISC\Temporary TV\Talent Shows",, 2), , 72, ,"500", "1000", "Välj TV-Serie!");
+ $path = gettoken(listfolder($show),-1,|);
+ // \\ds\tv\Better Things\S01    regex: \\S\d{2}  -tar bort \sxx
+ copytext $path;
+ Perm $ShowFullPath = regexreplace($path, "\\S\d{2}") . "\";
+ Perm $ShowName = gettoken($ShowFullPath, -2, "\");
+ goto $path . "\";
+
+"_FileZilla"
+ run '"C:\Program Files (x86)\FileZilla FTP Client\filezilla.exe" --local="' . <clipboard> . '" --site="0/whatbox/odyssey.whatbox.ca"';
+ 
+"_WEBLINK";
+ $LinkFile = "D:\Google Drive\Scriptstuff\weblinks\weblinks.txt";
+ $LinkCat = popupmenu(replacelist(regexmatches(readfile($LinkFile), "\[.+]"), "[|]", , |));
+ $Link = popupmenu(formatlist(getkey(links, $LinkCat, $LinkFile), eds) . "|-|Öppna Alla");
+ if ($Link == "Öppna Alla"){
+	foreach($open, getkey(links, $LinkCat, $LinkFile)){
+		if regexmatches($open, "\%SEARCH") == ""{goto gettoken($open, 2, ";");};
+		};
+	};
+ elseif (regexmatches($Link, "\%SEARCH") != ""){goto replace($Link, "%SEARCH", input("Ange sökterm"));};
+ else {goto $Link;};
+
+"_WEBLINKADD";
+ $LinkFile = "D:\Google Drive\Scriptstuff\weblinks\weblinks.txt";
+ $LinkCat = popupmenu(replacelist(regexmatches(readfile($LinkFile), "\[.+]"), "[|]", , |) . "|-|Ny Kategori");
+ if $LinkCat == "Ny Kategori"{
+	$LinkCat = input("Ange Kategori");	
+	};
+ 
+ setkey(getkey(links, $LinkCat, $LinkFile) . "|" . input("Ange Namn") . ";" . input ("Ange Address"), links, $LinkCat, $LinkFile)
+ 
+"_APPSTART"
+ $AppList = "D:\Google Drive\Scriptstuff\apps\apps.txt";
+ open popupmenu(sort(getkey(applist, AppLocations, $AppList)));
+
+
+
+
+
+

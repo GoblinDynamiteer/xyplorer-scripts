@@ -1,0 +1,189 @@
+ releaseglobals 3;
+ delete 0, 0, "D:\Temp\temprar\*.rar";
+ $BackupSelect = popupmenu("Master|-|Spel|-|" . formatlist("Lightroom Catalog|Script|Kvitton & Dokument|NewsLeecher Settings|XYplorer Settings|ScriptStuff|Fotografier|DayOne|DayOne Foton|SRT|MUIS", eds) . "|-|Ta bort gamla backups");
+
+ //Argument för rar.exe i sub rarer  -x är ignore -har lagt till mkv-filer för inspelningar kodning i utbildningen
+ perm $switch = "a -r -ep1 -x*\posters -x*\posters\* -x*.mkv";
+ 
+ if $BackupSelect == ("Ta bort gamla backups"){
+	end 1, "bygg om för ds";
+	$Deletelist = "";
+	foreach($FileNameFilter, "ScriptStuff|Script_|Kvitton|NewsLeecher|XYplorer|Subtitles"){
+		foreach($Backuplocation, "D:\Google Drive\Backups|\\DROBO1\Backup|D:\Dropbox\Backup"){
+			$FileList = formatlist(report("{modified yyyy-mm-dd};{Path}{name}|", listfolder("$Backuplocation", $FileNameFilter . "*")), es);
+			$Filecount = gettoken($FileList, count, |);
+			if ($Filecount > 2) {
+				$i = 2 - $Filecount;
+				$Token = 1;
+				while ($i != 0){
+					$Deletelist = $Deletelist . "|" . gettoken(gettoken($FileList, $Token, |), 2, ";");
+					$Token++;
+					$i++;
+					};
+				};
+			};
+		};
+	foreach($FileNameFilter, "Stardew|The*Witcher*3"){
+		foreach($Backuplocation, "D:\Google Drive\Backups\Game Saves|\\ds\Backup\Game Saves"){
+			$FileList = formatlist(report("{modified yyyy-mm-dd};{Path}{name}|", listfolder("$Backuplocation", $FileNameFilter . "*")), es);
+			$Filecount = gettoken($FileList, count, |);
+				if ($Filecount > 2){
+					$i = 2 - $Filecount;
+					$Token = 1;
+					while ($i != 0){
+						$Deletelist = $Deletelist . "|" . gettoken(gettoken($FileList, $Token, |), 2, ";");
+						$Token++;
+						$i++;
+						};
+					};
+			};
+		};
+	foreach($Backuplocation, "D:\Google Drive\Backups\MasterXLS|\\ds\Backup\Master|D:\Dropbox\Backup\master"){
+		$FileList = formatlist(report("{modified yyyy-mm-dd};{Path}{name}|", listfolder("$Backuplocation", "Master*")), es);	
+		$Filecount = gettoken($FileList, count, |);
+		if $Filecount (> 5) {
+			$i = 5 - $Filecount;
+			$Token = 1;
+			while ($i != 0) {
+				$Deletelist = $Deletelist . "|" . gettoken(gettoken($FileList, $Token, |), 2, ";");
+				$Token++;
+				$i++;
+				};
+			};
+	};
+	if (confirm("Radera filer ?: <crlf><crlf>" . replace(formatlist($Deletelist, es), "|", <crlf>), ,2 , 4) == 1){
+		delete 0, 0, formatlist($Deletelist, es);	
+		msg "Filer raderade!";
+		};
+ };
+
+ if ($BackupSelect == "Master"){
+	sub "_Master";	
+	};
+
+	
+	
+ if ($BackupSelect == "MUIS"){
+	perm $Name = "MUIS";
+	perm $Folder = '"D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+	
+	
+	
+ if ($BackupSelect == "Kvitton & Dokument"){
+	perm $Name = "Kvitton & Dokument";
+	perm $Folder = '"D:\Google Drive\Misc\Pengar"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+
+ if ($BackupSelect == "SRT"){
+	perm $Name = "SRT Subtitles";
+	perm $Folder;
+	foreach($Folder, '"\\ds\TV\*.srt"|"\\ds\FILM\*.srt"'){
+		sub "_Rarer";
+		};
+	sub "_Copy";
+	};
+
+ if ($BackupSelect == "NewsLeecher Settings"){
+	perm $Name = "NewsLeecher Settings";
+	perm $Folder = '"C:\Users\kampe_000\AppData\Roaming\NewsLeecher"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+	
+ if ($BackupSelect == "XYplorer Settings"){
+	perm $Name = "XYplorer Settings";
+	perm $Folder = '"C:\Users\kampe_000\AppData\Roaming\XYplorer"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+ 
+ if ($BackupSelect == "DayOne"){
+	perm $Name = "DayOne";
+	perm $Folder = '"' . gettoken(listfolder("\\GDHQ\Server HD\Users\johan\Library\Group Containers\5U8NS4GX82.dayoneapp2\Data\Backup", , 2), -1, |) . '"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+ 
+ if ($BackupSelect == "DayOne Foton"){
+	perm $Name = "DayOne Foton";
+	perm $Folder = '"\\GDHQ\Server HD\Users\johan\Library\Group Containers\5U8NS4GX82.dayoneapp2\Data\Documents\DayOnePhotos"';
+	sub "_Rarer";
+	sub "_Copy";
+	}
+ 
+ if ($BackupSelect == "ScriptStuff"){
+	perm $Name = "ScriptStuff";
+	perm $Folder = '"D:\Google Drive\Scriptstuff"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+ 
+ if ($BackupSelect == "Script"){
+	perm $Name = "Script";
+	perm $Folder = '"C:\Users\kampe_000\AppData\Roaming\XYplorer\Scripts"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+
+ if ($BackupSelect == "Lightroom Catalog"){
+	perm $Name = "Lightroom Catalog";
+	perm $Folder = '"D:\Google Drive\Bilder\Lightroom Catalog"';
+	sub "_Rarer";
+	sub "_Copy";
+	};
+
+	
+ if ($BackupSelect == "Fotografier"){
+	backupto "\\ds\IMAGES", "D:\Google Drive\Bilder\Fotografier - Egna";
+	};
+
+ if ($BackupSelect == "Spel") {
+	$BackupLocation = "\\ds\Backup\Game Saves";
+	$GameList = readfile("D:\Google Drive\Scriptstuff\backup\game_locations.txt");
+	$GameToken = popupmenu(formatlist($GameList, eds),,,,,1);
+	perm $Folder = '"' . gettoken(gettoken(formatlist($GameList, eds), $GameToken, |), 2, ";") . '"';
+	perm $Name = gettoken(gettoken(formatlist($GameList, eds), $GameToken, |), 1, ";");
+	sub "_Rarer";
+	copier(""); //back to XYplorer's Custom Copy
+	foreach($BackupLocation, "\\DROBO1\Backup\Game Saves|D:\Google Drive\Backups\Game Saves|\\ds\BACKUP\Game Saves"){
+		copyto $BackupLocation, listfolder("D:\Temp\temprar\", *.rar);
+		};
+	copier("TeraCopy|C:\Program Files\TeraCopy\TeraCopy.exe|/Close /open_window");
+	};
+
+"_Rarer"
+ if (%COMPUTERNAME% == "CORSAIR"){
+	run '"C:\Program Files (x86)\WinRAR\RAR.exe" ' . $switch . ' "D:\Temp\temprar\' . $Name . '_' . now("yyyy-mm-dd") . '.rar" ' . $Folder, "C:\" ,1;
+	};
+ else if {
+	msg "NOT CORSAIR";
+	};
+ 
+
+"_Master"
+	copier(""); //back to XYplorer's Custom Copy
+	perm $Name = "Master";
+	perm $Folder = '"D:\Google Drive\Misc\*.xlsm"';
+	sub "_Rarer";
+	perm $Folder = '"D:\Google Drive\Misc\Pengar\Aktieklubb\data_aktieklubb.xlsx"';
+	sub "_Rarer";
+	renameitem("Master_" . now("yyyy-mm-dd-hhnn") . ".rar", listfolder("D:\Temp\temprar\", *.rar));
+	foreach($BackupLocation, "D:\Google Drive\Backups\MasterXLS|D:\Dropbox\Backup\master|\\ds\BACKUP\Excel-Filer"){
+		copyto $BackupLocation, listfolder("D:\Temp\temprar\", *.rar);
+		};
+	copier("TeraCopy|C:\Program Files\TeraCopy\TeraCopy.exe|/Close /open_window");
+
+"_Copy"
+ copier(""); //back to XYplorer's Custom Copy
+ foreach($BackupLocation, "D:\Google Drive\Backups|D:\Dropbox\Backup|\\ds\BACKUP\Misc"){
+	copyto $BackupLocation, listfolder("D:\Temp\temprar\", *.rar);
+	};
+ copier("TeraCopy|C:\Program Files\TeraCopy\TeraCopy.exe|/Close /open_window");
+ releaseglobals 3;
+ end 1;
+

@@ -1,0 +1,42 @@
+﻿ include CustomCommandsAndVariables;
+ $Temp = "D:\Downloads\TEMPTV";
+ $FileList = vid_nopath($Temp);
+ //textfil som håller temporär data innan filflytt, skrivs blank innan körning
+ $PreMoveData = "D:\Google Drive\Scriptstuff\MediaDb\new_tv_premove.txt";
+ writefile($PreMoveData, "", o);
+ perm $TVMoveScript = 1;
+	foreach($File, $FileList){
+		$SeasonFolder = regexmatches($File, "S\d{2}");
+		//plockar ut texten före sxx och sätter som showname, sedan kollas regexmatchingar för serier där regex inte stämmer med katalognamn
+		perm $ShowName = replace(gettoken(regexmatches($File, "(?:(?!.s\d{2}).)*"), 1, |), ".", " ");
+		if (regexmatches($ShowName, "powers.us") != "")								{$ShowName = "Powers 2015";};
+		if (regexmatches($ShowName, "aftermath") != "")								{$ShowName = "Aftermath";};
+		if (regexmatches($ShowName, "the.flash") != "")									{$ShowName = "The Flash";};
+		if (regexmatches($ShowName, "mr.robot") != "")									{$ShowName = "Mr. Robot";};
+		if (regexmatches($ShowName, "american.gothic") != "")						{$ShowName = "American Gothic";};
+		if (regexmatches($ShowName, "penn.and.teller.fool.us") != "")				{$ShowName = "Penn & Teller Fool Us";};
+		if (regexmatches($ShowName, "marvel's.agents.of.s.h.i.e.l.d") != "") 		{$ShowName = "Marvels Agents of S.H.I.E.L.D";};
+		if (regexmatches($ShowName, "from.dusk.till.dawn") != "") 					{$ShowName = "From Dusk Till Dawn";};
+		if (regexmatches($ShowName, "Scream.Queens") != "") 						{$ShowName = "Scream Queens";};
+		$Path = "\\ds\TV\" . $ShowName;
+		if ($Path != ""){
+			setkey $Path, Path, $File, $PreMoveData;
+			setkey $SeasonFolder, Season, $File, $PreMoveData;
+			setkey $ShowName, ShowName, $File, $PreMoveData;
+			};
+	};
+	$Choice = inputselect("Välj filer att flytta!", $FileList, , 2 + 8, ,1000);
+	if ($Choice == ""){End 1, "Inga filer valda";};
+	foreach($File, $Choice){
+			perm $NewScript == "TV";
+			perm $ShowFullPath = getkey(Path, $File, $PreMoveData);
+			$ShowName = getkey(ShowName, $File, $PreMoveData);
+			$Season = getkey(Season, $File, $PreMoveData);
+			if (confirm("Flytta<br>" . $File . "<br>till<br>" . $ShowFullPath . "\" . $Season . "?") == 1){
+				moveto $ShowFullPath . "\" . $Season, quicksearch($File, $Temp);
+				if (confirm("Kör NewItems_TV-script på<br>" . $ShowFullPath . "?") == 1){load NewItems_TV;	};
+				};
+	};
+ releaseglobals 3;
+ status "Filer flyttade!", 000000;
+ 

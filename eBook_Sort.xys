@@ -1,0 +1,16 @@
+"Ebook Sorter"
+ copier(""); //back to XYplorer's Custom Copy
+ $List = "";
+ $Folder = inputfolder("D:\Downloads\eBooks");
+ foreach($file, listfolder($Folder,,5)){
+	$Author = gettoken($file, 1, " - ");
+	$Letter = substr($Author, 0, 1);
+	if ($Letter == "V"){$Letter = "VW"};
+	if ($Letter == "W"){$Letter = "VW"};
+	if (exists($Folder . "\" . $Letter) == 0) 					{new($Folder . "\" . $Letter, "dir");};
+	if (exists($Folder . "\" . $Letter . "\" . $Author) == 0) 	{new($Folder . "\" . $Letter . "\" . $Author, "dir");};	
+	moveto $Folder . "\" . $Letter . "\" . $Author, $Folder . "\" . $file;
+	status "Bearbetar fil " . $file, 000000, progress; wait 1;
+	};
+	copier("TeraCopy|C:\Program Files\TeraCopy\TeraCopy.exe|/Close /open_window");
+	msg "Klar!";

@@ -1,0 +1,76 @@
+"_TVNextEpisode : NextEpisode"
+ $NextEp = getkey(<cc_name>, NextEpisode, "C:\ScriptDb\CustomColumsData\NextEpisode.txt");
+ if (regexmatches($NextEp, "\d{4}-\d{2}-\d{2}") != ""){
+	$DaysDiff = datediff(regexmatches($NextEp, "\d{4}-\d{2}-\d{2}"));
+		if $DaysDiff == 0 {return $NextEp . " (idag)";};
+		if $DaysDiff < -1  {$DaysDiff = $DaysDiff * -1; return $NextEp . " (om " . $DaysDiff . " dagar)";	};
+		if $DaysDiff == -1  {return $NextEp . " (i morgon)";	};
+		if $DaysDiff == 1  {return $NextEp . " (igår)";};
+		if $DaysDiff > 1  {return $NextEp . " (" . $DaysDiff . " dagar sedan)";};
+	};
+ else{return $NextEp;};
+
+"_Link : Link"
+ releaseglobals 3;
+ include CustomCommandsAndVariables;
+ $PopItems = (type(<cc_path>) == movie) ? "IMDb|Trakt|-|OpenSubtitles|NZBPlanet|-|Svenska Filminstitutet|Rotten Tomatoes" : "IMDb|TVmaze|Trakt|-|RarBG (Show)|RarBG (Nästa Avsnitt)";
+ $IMDb = (type(<cc_path>) == movie) ? getmov(IMDbId, <cc_name>) : gettv(ImdbId, <cc_name>);
+ $SiteSelect = popupmenu($PopItems);
+	if ($SiteSelect == IMDb)					{goto "http://www.imdb.com/title/" . $IMDb;};
+	if ($SiteSelect == Trakt)					{goto "https://trakt.tv/search/imdb?query=" . $IMDb;};
+	if ($SiteSelect == "SFI") 					{goto "http://www.filminstitutet.se/sv/sok/?node=0&q=" . getmov(Title, <cc_name>);};
+	if ($SiteSelect == TVmaze)					{goto "http://www.tvmaze.com/shows/" . getnext(TVMazeID, <cc_name>);};
+	if ($SiteSelect == "Trakt")					{goto "https://trakt.tv/search/imdb?query=" . $IMDb;};
+	if ($SiteSelect == "RarBG (Show)")			{goto "https://rarbg.to/torrents.php?search=" . <cc_name> . "&category%5B%5D=41";};
+	if ($SiteSelect == "RarBG (Nästa Avsnitt)")	{goto "https://rarbg.to/torrents.php?search=" . <cc_name> . " " . gettoken(getnext(NextEpisode, <cc_name>), 1, ":") . "&category%5B%5D=41";};
+	if ($SiteSelect == "Rotten Tomatoes") {goto "https://www.rottentomatoes.com/search/?search=" . getmov(Title, <cc_name>);};
+	if ($SiteSelect == "OpenSubtitles") {goto "http://www.opensubtitles.eu/en/search/sublanguageid-all/imdbid-" . $IMDb;copytext <cc_path> . <cc_name> . "\" . <cc_name> . ".zip";};
+	if ($SiteSelect == "NZBPlanet") {goto "https://nzbplanet.net/movies?imdb=" . trim($IMDb, t);};
+
+
+"_DataBase : DataBase"
+ include CustomCommandsAndVariables;
+ $IMDb = (type(<cc_path>) == movie) ? getmov(IMDbId, <cc_name>) : gettv(IMDbId, <cc_name>);
+ $Year = (type(<cc_path>) == movie) ? getmov(Year, <cc_name>) : gettoken(gettv(Year, <cc_name>), 1, –);
+ if (exists($PosterPath . $Year . "\" . $IMDb . ".png") == 1){
+	$Poster = "Visa Poster";
+	unset $GetPoster;
+	};
+ else {
+	$Poster = "Ladda ner och visa poster";
+	$GetPoster = 1;
+	};
+ 
+ $DBInfo = "Visa Db-information";
+ $IMDBChange = "Byt IMDb-ID";
+ $Runtime = (type(<cc_path>) == movie) ? "Sätt Runtime" : "";
+ $TVMid = (type(<cc_path>) == tv) ? "Sätt TVMazeID" : "";
+ 
+ $Choice = popupmenu(sort("$IMDBChange|$TVMid|$DBInfo|$Poster|$Runtime"));
+ 
+ if $Choice == $DBInfo {
+	if (type(<cc_path>) == movie) {text getmovinfo(<cc_name>)};
+	else {text getshowinfo(<cc_name>)};
+	};
+ 
+ if $Choice == $TVMid {
+	setnext(input("Ange TVMazeID"), TVMazeID, <cc_name>);
+	};
+ 
+ if $Choice == $IMDBChange{
+	$IMDBinput = regexmatches(input("Ange IMDb-ID", "ID eller Web-address"), "tt\d{4,}");
+	if ($IMDBinput == "") {end 1 ,"Fel input, avbryter";};
+	if (type(<cc_path>) == movie) {setmov($IMDBinput, IMDbId, <cc_name>)};
+	if (type(<cc_path>) == tv) {settv($IMDBinput, IMDbId, <cc_name>)};
+	};
+
+ if $Choice == $Poster{
+	if ($GetPoster == 1){
+		if (type(<cc_path>) == movie) {getposter(<cc_name>)};
+		if (type(<cc_path>) == tv) {gettvposter(<cc_name>)};
+		};
+	open $PosterPath . $Year . "\" . $IMDb . ".png";
+	};
+ 
+  
+

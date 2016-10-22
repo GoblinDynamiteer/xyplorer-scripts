@@ -1,0 +1,53 @@
+"CCWrite : CustomColumnWrite"
+include CustomCommandsAndVariables;
+ if (confirm("Uppdatera alla Custom Colums?",,2,4) == 0){end 1};
+ $Folders = listfolder("\\ds\FILM");
+ foreach($MovieList, $Folders){
+	foreach($Movie, listfolder($MovieList, ,6)){
+		foreach($CC, "Year|Genre|Rating|Title|FileRuntime"){
+			setkey getmov($CC, $Movie), $Movie, $CC, "D:\Google Drive\Scriptstuff\CustomColumsData\" . $CC . ".txt";
+			};
+		setkey CheckSubs($Movie), $Movie, Subtitles, "D:\Google Drive\Scriptstuff\CustomColumsData\Subtitles.txt";
+		status "Sätter CustomColum-data för film: " . $Movie, 000000, progress;
+		wait 1;
+		};
+	};
+
+ $Folders = listfolder("\\ds\TV", , 6);
+ foreach($Show, $Folders){
+	foreach($CC, "Year|Genre|Rating|LatestLocalEpisode"){
+		setkey gettv($CC, $Show), $Show, $CC, "D:\Google Drive\Scriptstuff\CustomColumsData\" . $CC . ".txt";
+		};
+	setkey getnext(NextEpisode, $Show), $Show, NextEpisode, "D:\Google Drive\Scriptstuff\CustomColumsData\NextEpisode.txt";
+	status "Sätter CustomColum-data för serie: " . $Show, 000000, progress;
+	};
+ sub "_CopyToSSD";
+ releaseglobals 3;
+ end 1, "Klar!";
+ 
+"_UpdateOneTV : UpdateOneTV"
+ include CustomCommandsAndVariables;
+ foreach($CC, "Year|Genre|Rating|LatestLocalEpisode"){
+	setkey gettv($CC, $ShowName), $ShowName, $CC, "D:\Google Drive\Scriptstuff\CustomColumsData\" . $CC . ".txt";
+	};
+ setkey getnext(NextEpisode, $ShowName), $ShowName, NextEpisode, "D:\Google Drive\Scriptstuff\CustomColumsData\NextEpisode.txt";
+ status "Sätter CustomColum-data för serie: " . $ShowName, 000000, progress;
+ sub "_CopyToSSD";
+ 
+"_UpdateOneMovie : UpdateOneMovie"
+ include CustomCommandsAndVariables;
+ foreach($CC, "Year|Genre|Rating|Title|FileRuntime"){
+	setkey getmov($CC, $MovieName), $MovieName, $CC, "D:\Google Drive\Scriptstuff\CustomColumsData\" . $CC . ".txt";
+	};
+ setkey CheckSubs($MovieName), $MovieName, Subtitles, "D:\Google Drive\Scriptstuff\CustomColumsData\Subtitles.txt";
+ status "Sätter CustomColum-data för film: " . $MovieName, 000000, progress;
+ wait 1;
+ sub "_CopyToSSD";
+
+"_CopyToSSD"
+ backupto "C:\ScriptDb", "D:\Google Drive\Scriptstuff\CustomColumsData";
+ backupto "C:\ScriptDb", $TVDb|$MovDb . "|D:\Google Drive\Scriptstuff\MediaDb\tv_nextairing.txt";
+ 
+
+
+

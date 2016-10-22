@@ -1,0 +1,107 @@
+$nf = confirm("Generera Film Report?", "<br>", 2, 4); //1: OK/Cancel; returns 1/0
+ if $nf == "1" 
+	{
+ 
+ $timestart = now();
+ $film1 = folderreport("dirs", "r", "\\DROBO1\Arkivet\Film\", , , "|");
+ 
+ $film2 = folderreport("dirs", "r", "\\DROBO2\Film", , , "|");
+ 
+ $film3 = "";
+ 
+ $i = "1";
+
+ while $i < gettoken("$film2", "count", "|")
+	{
+	$add1 = gettoken("$film2", "$i", "|");
+	
+	$add2 = folderreport("dirs", "r", "$add1", , , "|");
+	
+	$film3 = "$film3|$add2";
+	
+	$i++;
+	};
+ 
+ $film3 = formatlist("$film3", "eds", "|");
+ 
+
+ //$tva = folderreport("dirs", "r", "\\DROBO1\Anime\", , , "|");
+ 
+ $i = "1";
+ $report = "";
+ $line = "-------------------------------------------------------------------";
+
+ $filmlist = formatlist(report("{name}:{Fullpath}<crlf>", "$film1|$film3"), "eds", "<crlf>");
+ 
+ //
+
+ while $i < gettoken("$filmlist", "count", "<crlf>") 
+ 
+ //while $i < 20 
+	{
+		$film = gettoken(gettoken("$filmlist", "$i", "<crlf>"), "1", ":");
+		
+		$showlocation = gettoken(gettoken("$filmlist", "$i", "<crlf>"), "2", ":");
+		
+		//regexmatches(string, pattern, [separator="|"], [matchcase=0])
+		
+		if strpos("$showlocation", "DROBO2\Film") == "2" {$editedlocation = replace("$showlocation", "\\DROBO2\Film", "Film");};
+		if strpos("$showlocation", "DROBO1\Arkivet\Film") == "2" {$editedlocation = replace("$showlocation", "\\DROBO1\Arkivet\Film", "Film2");};
+		//if regexmatches("$showlocation", "\\DROBO2\Film") != "" {$editedlocation = replace("$showlocation", "\\DROBO2\Film", "Film");};
+		//if regexmatches("$showlocation", "\\DROBO1\Arkivet\Film") != "" {$editedlocation = replace("$showlocation", "\\DROBO1\Arkivet\Film", "Film2");};
+		
+		//$size = foldersize("$showlocation\$film", "(<b>)");
+				
+		$showinfo = readfile("D:\Google Drive\Scriptstuff\imdb_info\movie\$film.txt");
+		
+		$imdbtitle = gettoken("$showinfo", "1", "|");
+		$genre = gettoken("$showinfo", "3", "|");
+		$year = gettoken("$showinfo", "2", "|");
+		$imdbid = gettoken("$showinfo", "10", "|");
+		$subs = gettoken("$showinfo", "9", "|");
+		$dimensions = gettoken("$showinfo", "7", "|");
+		$runtime = gettoken("$showinfo", "4", "|");
+		$rating = gettoken("$showinfo", "5", "|");
+		$runtimemkv = gettoken("$showinfo", "11", "|");
+		$size = gettoken("$showinfo", "8", "|");
+		
+		/* 
+		-------------------------------------------------------------------
+		10.Cloverfield.Lane.2016.720p.BluRay.x264-SPARKS 
+		-------------------------------------------------------------------
+		IMDb Info: 
+		Title: 10 Cloverfield Lane (2016)
+		Drama, Horror, Mystery | 103 min
+		Rating: 7.4
+		http://www.imdb.com/title/tt1179933/
+
+		File Info:
+		Location: \\DROBO2\Film\# (5 GB)
+		Dimensions: 1280 x 536
+		File Runtime: 103 min
+		External Subtitles: None
+		*/
+
+		//1 TITLE | 2 YEAR | 3 GENRE | 4 RUNTIME | 5 RATING | 6 FILENAME | 7 DIMENSIONS | 8 SIZE | 9 SUBS | 10 IMDB ID | 11 FILE RUNTIME
+		$report = "$report<crlf>$line<crlf>$film<crlf>$line<crlf>IMDb Info:<crlf>Title: $imdbtitle ($year)<crlf>$genre | $runtime<crlf>Rating: $rating<crlf>http://www.imdb.com/title/$imdbid/<crlf><crlf>File Info:<crlf>Location: $editedlocation $size<crlf>$dimensions<crlf>File Runtime: $runtimemkv<crlf>$subs<crlf><crlf>";
+		
+		$i++;
+	};
+ 
+ $countmovies = gettoken("$filmlist", "count", "<crlf>");
+ 
+ 
+ $timetogenerate = datediff("$timestart", , "s");
+ 
+ $header = "Movie Listing<crlf>Updated <date yyyy-mm-dd hh:nn><crlf>Generated in $timetogenerate seconds<crlf>$countmovies Movies listed.<crlf><crlf>";
+
+
+ writefile ("D:\Google Drive\Scriptstuff\imdb_info\movie_listing.txt", "$header$report");
+ };
+				
+ msg "Report klar. Tog $timetogenerate s";
+				
+ if $nf == "0" 
+	{
+	end 1==1;
+	};

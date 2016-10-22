@@ -1,0 +1,79 @@
+ include CustomCommandsAndVariables;
+ NoDbFolder();
+ sub "_ClipboardAndSelectionCheck";
+ Perm $IMDbId = gettv(IMDbId, $ShowName);
+ if ($IMDbId == ""){
+	goto "http://www.imdb.com/find?&q=" . $ShowName;
+	settv(regexmatches(input("Ange Imdb-ID/Imdb-Url för " . $ShowName), "tt\d{1,}"), IMDbId, $ShowName);
+	$IMDbId = gettv(IMDbId, $ShowName);
+	};
+ Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
+ foreach($Data, getkey(DataList, RegexTV, $RegexList)){
+	settv(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexTV, $RegexList)), getkey($Data . "Replace", RegexTV, $RegexList), "", | ), $Data, $ShowName);
+	};
+ settv(latestep(), LatestLocalEpisode, $ShowName);
+ if (getnext(NextEpisode, $ShowName) != Ended){sub "_NextAiring";};
+ load CustomColumnsWriteData, UpdateOneTV;
+  if ($StepperRunning != 1){
+	#1001; //refresh 
+	#372; //autoresize columns 
+	if ($TVMoveScript != 1) {releaseglobals 3;};
+	};
+
+
+"_NextAiring"
+ $SkipAiring = 0;
+ if (getnext(TVMazeID, $ShowName) == ""){
+	if ($IMDbId == ""){
+		setnext("No IMDb ID", NextEpisode, $ShowName);
+		$SkipAiring = 1;
+		};
+	if (exists("http://api.tvmaze.com/lookup/shows?imdb=" . $IMDbId) == "0|404"){
+		setnext("No TVMaze ID", NextEpisode, $ShowName);
+		$SkipAiring = 1;
+		};
+	setnext(gettoken(regexmatches(readurlUTF8("http://api.tvmaze.com/lookup/shows?imdb=" . $IMDbId, 1,0,2), "\d{1,}"), 1, |), TVMazeID, $ShowName);	
+ };
+ if ($SkipAiring == 0){
+	$S = gettoken(regexmatches(latestep(), "\d{2}"), 1, |);
+	$E = gettoken(regexmatches(latestep(), "\d{2}"), 2, |);
+	$NTC = "S" . format($S, "00") . "E" . format($E + 1, "00"); //Next To Collect
+	if (exists(tvurl($S,$E + 1)) != "0|404"){
+		setnext($NTC . ": ". gettoken(regexmatches(readurlUTF8(tvurl($S,$E + 1)), "\d{4}-\d{2}-\d{2}"), 1, |), NextEpisode, $ShowName);
+		};
+	else {
+		if (exists(tvurl($S + 1, 1)) != "0|404"){
+			$NTC = "S" . format($S + 1, "00") . "E01";
+			setnext($NTC . ": ". gettoken(regexmatches(readurlUTF8(tvurl($S + 1, 1)), "\d{4}-\d{2}-\d{2}"), 1, |), NextEpisode, $ShowName);
+			};
+		else {
+			if (regexmatches(tvm(), "status...ended") != "")	{setnext(Ended, NextEpisode, $ShowName);break;};
+			if (regexmatches(tvm(), "status...running") != "")	{setnext(Running, NextEpisode, $ShowName);break;};
+			if (regexmatches(tvm(), "to.be.determined") != "")	{setnext(TBD, NextEpisode, $ShowName);};
+			};
+		};
+ };
+
+"_GetPoster"
+	//gettvposter($ShowName);
+
+"_ClipboardAndSelectionCheck"
+ Perm $ShowFullPath = isset($ShowFullPath) ? $ShowFullPath : get("SelectedItemsPathNames");
+ Perm $ShowName = isset($ShowName) ? $ShowName : get("SelectedItemsNames");
+ if (regexmatches($ShowFullPath, "\\S\d{2}") != ""){
+	$ShowFullPath = regexreplace($ShowFullPath, "\\S\d{2}");
+	$ShowName = gettoken($ShowFullPath, -1, "\");
+ };
+ if (gettoken($ShowFullPath, count, <crlf>) > 1){
+	releaseglobals 3;
+	end 1, "Fler än en markerad fil/mapp, avbryter script";
+ };
+ if (regexmatches($ShowFullPath, "ds.TV") == ""){
+	releaseglobals 3;
+	end 1, "Ej i \\ds\TV, avbryter.";
+ };
+ if (exists($ShowFullPath) == 1){
+	releaseglobals 3;
+	end 1,"En fil är markerad! Avbryter Script";
+ };
+ 

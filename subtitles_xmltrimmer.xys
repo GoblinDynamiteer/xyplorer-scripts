@@ -1,0 +1,43 @@
+$string = input("Enter copied XML Netflix subtitles",  , ,"m"); 
+ $i = "1";
+ $trimmedstring = substr("$string", strpos("$string", "<p begin"));  
+ global $formatedtime;
+ 
+ $trimmedstring = replace("$trimmedstring", "<crlf></div><crlf></body><crlf></tt><crlf>", "");
+  
+ while gettoken("$trimmedstring", "count", "<crlf>") > $i
+	{
+		$line = gettoken("$trimmedstring", $i, "<crlf>");
+		/*
+		
+		XML String token
+		<p begin="359525832t" end="380380000t" region="region.after" style="defaultStyle" xml:id="subtitle0">Var det den hÃ¤r vÃ¤ggen hon menade?</p>
+					
+		srt format:
+		2
+		00:01:43,738 --> 00:01:47,450
+		Nånting är på väg hitåt
+		Nånting som hungrar efter blod./
+		*/
+		
+		global $tick = gettoken(regexmatches("$line", "\d{6,}"), 1, "|");		
+		load subtitles_convert_ticks;
+		
+		$srtstring = "$i<crlf>$formatedtime -->";
+		
+		global $tick = gettoken(regexmatches("$line", "\d{6,}"), 2, "|");		
+		load subtitles_convert_ticks;
+		
+		//$text = regexmatches("$line", "\>(.*?)\<");
+		
+		$text = replacelist(regexmatches("$line", "\>(.*?)\<", "<crlf>"), "<|>", "|", "|", 1);
+		
+		$srtstring = "$srtstring $formatedtime<crlf>$text<crlf><crlf>";
+		
+		writefile("D:\temp\srtsub.srt", "$srtstring", "a", "r");
+		
+		$i++;
+	};
+	moveto "D:\", "D:\temp\srtsub.srt";
+	
+	msg "Klar: D:\temp\srtsub.srt";

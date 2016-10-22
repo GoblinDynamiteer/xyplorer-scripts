@@ -1,0 +1,3 @@
+ include CustomCommandsAndVariables;
+ text 'vid_path("\\ds\TV\Attack on Titan") :' . <crlf> .  vid_path("\\ds\TV\Attack on Titan\");
+ 

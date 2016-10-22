@@ -1,0 +1,110 @@
+ //Variables
+ Perm $TVDb = "D:\Google Drive\Scriptstuff\MediaDb\tv_database.txt";
+ Perm $MovDb = "D:\Google Drive\Scriptstuff\MediaDb\movie_database.txt";
+ Perm $CodeDbBook = "D:\Google Drive\Scriptstuff\CodeDb\cdb_book.txt";
+ 
+ Perm $OMDbbAPIKey = "61f2c8e2";
+ 
+ Perm $RecentlyAddedTXT = "D:\Google Drive\Scriptstuff\recently_added\recently_added_tv.txt";
+ Perm $RecentlyAddedMov = "D:\Google Drive\Scriptstuff\recently_added\recently_added_movies.txt";
+ Perm $DeletedItemsTXT = "D:\Google Drive\Scriptstuff\MediaDb\deleted_items.txt";
+ Perm $NextDb = "D:\Google Drive\Scriptstuff\MediaDb\tv_nextairing.txt";
+ Perm $RegexList = "D:\Google Drive\Scriptstuff\MediaDb\regexlist.txt";
+ Perm $PosterPath = "D:\Google Drive\Scriptstuff\MediaDb\posters\";
+ 
+ perm $PaperLocation = "C:\Users\kampe_000\AppData\Roaming\XYplorer\Paper\";
+ 
+ //Functions
+ function sort($ListToSort) {return formatlist($ListToSort, eds, |);} 
+ 
+ function NoDbFolder(){
+	if (get("Path", 1) == "D:\Google Drive\Scriptstuff\MediaDb"){
+		focus P1;goto "D:\";
+		};
+	}
+
+ function StopScript(){
+	wait 1;
+	if (get("shift") == 6){
+		releaseglobals 3;
+		end 1, "CTRL + ALT intryckt, avbryter skript. Tömmer alla variabler";
+		};
+	}
+ 
+ 
+ //function CodeCC($Type) {return getkey(<cc_name>, $Type, $CodeDbBook);} 
+ function CodeCC($Type) {return "hej";} 
+ 
+ function gettv($data, $ShowName) {status "Hämtar " . $data . " för " . $ShowName, 000000, progress;return getkey($data, $ShowName, $TVDb);} 
+ function settv($data, $key, $ShowName) {setkey $data, $key, $ShowName, $TVDb;}
+ function getshowinfo($ShowName) {return getsectionlist($ShowName, $TVDb);} 
+ 
+ function getmovinfo($MovieName) {return getsectionlist($MovieName, $MovDb);} 
+ function getmov($key, $MovieName) {status "Hämtar " . $key . " för " . $MovieName; return getkey($key, $MovieName, $MovDb);} 
+ function setmov($data, $key, $MovieName) {setkey $data, $key, $MovieName, $MovDb;}
+ 
+ function setnext($data, $key, $ShowName) {setkey $data, $key, $ShowName, $NextDb;}
+ function getnext($data, $ShowName) {return getkey($data, $ShowName, $NextDb);} 
+ 
+ function setmovlist($data, $key) {setkey $data, $key, $MovieLetter . _List, $MovDb;}
+ function getmovlist($data) {return getkey($data, $MovieLetter . _List, $MovDb);}
+ 
+ function latestep() {return recase(regexmatches(gettoken(listfolder(gettoken(listfolder($ShowFullPath, , 2), -1, |), , 4), -1, |), "S\d{2}E\d{2}"), upper);}
+ 
+ function getruntime($FullPathToFile) {status "Läser Runtime i MediaInfo för: ". $FullPathToFile, 000000, progress;return round(regexmatches(runret('"C:\Program Files\mediainfo\MediaInfo.exe" "--Output=Video;%Duration%" "' . $FullPathToFile .  '"', , 2), "\d{7,}") / 1000 / 60, 0);}
+ 
+ function vid_nopath($FullPath) {
+	$Holder = "";
+	foreach($file, quicksearch("*.mkv OR *.avi OR *.mp4 OR *.m4v", $FullPath, |)){
+		$Holder = $Holder . | . gettoken($file, -1, \);
+		};
+	return sort($Holder);
+	}
+ 
+ function updateinfo() {
+	backupto "\\ds\INFO", "D:\Google Drive\Scriptstuff\MediaDb\deleted_items.txt";
+	backupto "\\ds\INFO", "D:\Google Drive\Scriptstuff\recently_added";
+	};
+ 
+ //returnerar lista med mkv, mp4, avi, m4v-filer. Parameter ska vara full sökväg dit filer ska hittas. Reutrn ger varje fil med full sökväg, separerat med |
+ function vid_path($FullPath) {return quicksearch("*.mkv OR *.avi OR *.mp4 OR *.m4v", $FullPath, |);}
+ 
+ function tvm($ShowName) {return readurlUTF8("http://api.tvmaze.com/shows/" . getnext(TVMazeID, $ShowName));}
+ function tvurl($Season, $Episode) {return "http://api.tvmaze.com/shows/" . getnext(TVMazeID) . "/episodebynumber?season=" . $Season . "&number=" . $Episode;}
+ 
+ function unrar($source,$location) {status "UnRarar: ". $source, 000000, progress;run '"C:\Program Files (x86)\WinRAR\UnRAR.exe" x "' . $source . '" "' . $location . '"', , 2;}
+ 
+ function getposter($MovieName) {
+	if exists($PosterPath . getmov(Year, $MovieName) . "\" . getmov(IMDbId, $MovieName) . ".png") == 0{
+		if exists($PosterPath . getmov(Year, $MovieName) . "\") != 2{
+			new($PosterPath . getmov(Year, $MovieName) . "\", "dir");	
+		};
+	};
+	download "http://img.omdbapi.com/?apikey=" . $OMDbbAPIKey . "&i=" . getmov(IMDbId, $MovieName) . "&h=1500", $PosterPath . getmov(Year, $MovieName) . "\" . getmov(IMDbId, $MovieName) . ".png";
+	}
+ 
+ function gettvposter($ShowName) {
+	$TVyear = gettoken(regexmatches(gettv(Year, $ShowName), "\d{4}"), 1, |);
+ 	if exists($PosterPath . $TVyear . "\" . gettv(IMDbId, $ShowName) . ".png") == 0{
+		if exists($PosterPath . $TVyear . "\") != 2{
+			new($PosterPath . $TVyear . "\", "dir");	
+		};
+	download "http://img.omdbapi.com/?apikey=" . $OMDbbAPIKey . "&i=" . gettv(IMDbId, $ShowName) . "&h=1500", $PosterPath . $TVyear . "\" . gettv(IMDbId, $ShowName) . ".png";
+	}
+ 
+ function type($x){
+	if (gettoken($x, -3, \) == "FILM"){return movie};
+	elseif (gettoken($x, -2, \) == "TV"){return tv};
+	else {return other};
+	}
+ 
+ function CheckSubs($Movie){
+	 if (getmov(SubtitleEnglish, $Movie) != ""){$s="En";
+		if (getmov(SubtitleSwedish, $Movie) != ""){$s="En Sv";};
+		};
+	 if (getmov(SubtitleEnglish, $Movie) == ""){$s=""; 
+		if (getmov(SubtitleSwedish, $Movie) != ""){$s="Sv";};
+		};
+	return $s;
+	}
+

@@ -1,0 +1,102 @@
+ include CustomCommandsAndVariables;
+ sub "_ClipboardAndSelectionCheck"; 
+ NoDbFolder();
+ 
+  if getmov(Blacklist, $MovieName) == 1){
+	if (confirm("Film svartlistad i databasen, sätt värden manuellt?!", , , 4) == 1){
+		foreach($Data, "Title|Year|Genre"){setmov (input("$Data"), $Data, $MovieName);};
+		};
+	releaseglobals 3;
+	end 1;
+	};
+ 
+ Perm $RegexList = "D:\Google Drive\Scriptstuff\MediaDb\regexlist.txt";
+
+ Perm $IMDbId = getmov(IMDbId, $MovieName);
+	
+ 	if  ($IMDbId == ""){
+	goto "http://www.imdb.com/find?&q=" . replace(gettoken(regexmatches($MovieName, "[a-zA-Z.]+\d{4}"), 1, |), ".", " ");
+	setmov(regexmatches(input("Ange Imdb-ID/Imdb-Url för: " . $MovieName), "tt\d{1,}"), IMDbId, $MovieName);
+	$IMDbId = getmov(IMDbId, $MovieName);
+	};
+
+ Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
+ foreach($Data, getkey(DataList, RegexMovie, $RegexList)){	
+	setmov(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexMovie, $RegexList)), getkey($Data . "Replace", RegexMovie, $RegexList), "", | ), $Data, $MovieName);
+	};
+	
+ setmov(vid_nopath($MovieFullPath), MovieFileName, $MovieName);
+ setmov(listfolder($MovieFullPath, "*.en.srt", 1 + 4), SubtitleEnglish, $MovieName);
+ setmov(listfolder($MovieFullPath, "*.sv.srt", 1 + 4), SubtitleSwedish, $MovieName);
+ 
+ if (getmov(FrameWidth) == ""){
+	setmov(property("System.Video.FrameWidth", vid_path($MovieFullPath)), FrameWidth, $MovieName);
+	setmov(property("System.Video.FrameHeight", vid_path($MovieFullPath)), FrameHeight, $MovieName);
+	};
+ 
+ if (getmov(FileRuntime, $MovieName) == 0){
+	setmov(getruntime(vid_path($MovieFullPath)), FileRuntime, $MovieName);
+	};
+ 
+ if (getmov(FileRuntime, $MovieName) == ""){
+	setmov(getruntime(vid_path($MovieFullPath)), FileRuntime, $MovieName);
+	};
+
+ setmov(gpc($MovieFullPath, path), Path, $MovieName);
+
+ setmov(report("{Size FLEX}", vid_path($MovieFullPath)), FileSize, $MovieName);
+ 
+ sub "_GetPoster";
+ load CustomColumnsWriteData, UpdateOneMovie;
+ 
+ status "Db-info uppdaterad för: " . getmov(MovieFileName, $MovieName) . " (" . getmov(FileSize, $MovieName) . ")", 000000, ready;
+ 
+ if ($MovieMoveScript != 1){
+	releaseglobals 3;
+	};
+
+ if ($StepperRunning != 1){
+	wait 200;
+	#1001; //refresh 
+	#372; //autoresize columns 
+	};
+ 
+
+
+
+"_GetPoster"
+
+ if exists($PosterPath . getmov(Year, $MovieName) . "\" . $IMDbId . ".png") == 0{
+	if exists($PosterPath . getmov(Year, $MovieName) . "\") != 2{
+		new($PosterPath . getmov(Year, $MovieName) . "\", "dir");	
+		};
+	getposter($MovieName);
+	};
+
+"_ClipboardAndSelectionCheck"; 
+
+ Perm $MovieFullPath = isset($MovieFullPath) ? $MovieFullPath : get("SelectedItemsPathNames");
+ Perm $MovieName = isset($MovieName) ? $MovieName : get("SelectedItemsNames");
+ 	
+ if (regexmatches($MovieFullPath, "(drobo2.film|drobo1.arkivet.film|ds.film)") == ""){
+	end 1, "Markerad mapp finns ej bland Filmer! Avbryter";
+	};
+  
+ if (gettokenindex(gettoken($MovieFullPath, -2, "\"), "#|A|Anime|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|VW|X|Y|Z|Film", |) == ""){
+	releaseglobals 3;
+	end 1, "Avbryter, fel mapp för script.";
+	};
+  
+ if (gettoken($MovieFullPath, count, <crlf>) > 1){
+	releaseglobals 3;
+	end 1, "Fler än en markerad fil/mapp, avbryter script";
+	};
+ 
+ if regexmatches($MovieName, "(1080p|720p|bluray|hddvd|x264|DVDRip)") == ""){
+	releaseglobals 3;
+	end 1, "Markerad mapp verkar ej vara en film, avbryter";
+	};
+ 
+ 
+ 
+ 

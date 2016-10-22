@@ -1,0 +1,10 @@
+ $htmlfiler = quicksearch("*.html","D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\Kod\Boken\");
+ writefile("D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\ovn_list.txt", "", o);
+ foreach($fil, $htmlfiler, <crlf>)
+ {
+	//D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\Kod\Boken\ovn_1_04\hej.c.html
+	$hreflink = replace($fil, "D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\Kod\Boken", "bok");
+	$hrefname = replace($hreflink, "bok\");
+	writefile("D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\ovn_list.txt", '<a href="' . $hreflink . '">' . $hrefname .'</a><br>' . <crlf>, a);
+ };
+ open "D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\ovn_list.txt";

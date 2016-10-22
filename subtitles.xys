@@ -1,0 +1,53 @@
+ include CustomCommandsAndVariables;
+ if (quicksearch("*.zip") != "" ){sub "_zipextract";};
+ wait 200;
+ if (quicksearch("*.srt AND !.sv.srt AND !.en.srt",,|) == ""){releaseglobals 3;end 1, "Hittade inga srt-filer!, avbryter";};
+ sub "_renamer";
+ 
+"_zipextract"
+ $ziplist = zip_list(quicksearch("*.zip"));
+ $token = gettokenindex(".srt", $ziplist);
+ $srtfile = replace(gettoken($ziplist, $token, |), "<tab>", "");
+ zip_extract(quicksearch("*.zip"), "", $srtfile);
+ delete 0, 1, quicksearch("*.zip");
+
+
+"_renamer"
+  $wordlist_sv = "och|att|det|som|med|till|den|har|inte|om|ett|han|men|hon";
+  $wordlist_en = "the|be|to|of|and|that|have|it|for|not|on|with|he|as|you|do|at|she";
+  $regex_sv = "";
+  $regex_en = "";
+  perm $srt;
+  foreach($r, $wordlist_sv){
+	$regex_sv = $regex_sv . \s . $r . \s|;
+	};
+  foreach($r, $wordlist_en){
+	$regex_en = $regex_en . \s . $r . \s|;
+	};
+  perm $srtfiles = quicksearch("*.srt AND !.sv.srt AND !.en.srt",,|);
+
+  foreach($srt, $srtfiles){
+	$regex_sv = formatlist($regex_sv, eds, |);
+	$wordcount_sv = gettoken(regexmatches(readfile("$srt"), "(" . $regex_sv .")") ,count, |);
+	$regex_en = formatlist($regex_en, eds, |);
+	$wordcount_en = gettoken(regexmatches(readfile("$srt"), "(" . $regex_en .")"),count, |);
+	if ($wordcount_en > $wordcount_sv){
+		perm $suffix = ".en";
+			};	
+	elseif ($wordcount_en < $wordcount_sv){
+		perm $suffix = ".sv";
+			};
+	sub "_type";
+	};
+
+"_type"
+  if (regexmatches($srtfiles, ".ds.film") != ""){
+	$vidname = substr(gettoken(quicksearch("size: > 50MB",,|), -1, \), 0, -4);
+	renameitem($vidname . $suffix, $srt, 1);
+	};
+ elseif (regexmatches($srtfiles, ".ds.tv") != ""){
+	$se = regexmatches($srt, "s\d{2}e\d{2}");
+	$vid = substr(gettoken(quicksearch("*" . $se . "* AND size: > 50MB",,|), -1, \), 0, -4);
+	renameitem($vid . $suffix, $srt, 1)
+	};
+  
