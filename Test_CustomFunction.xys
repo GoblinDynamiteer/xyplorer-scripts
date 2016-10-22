@@ -1,3 +1,6 @@
  include CustomCommandsAndVariables;
- text 'vid_path("\\ds\TV\Attack on Titan") :' . <crlf> .  vid_path("\\ds\TV\Attack on Titan\");
+ $imdb = input("IMDB");
+ $vad = popupmenu("Title|Year|Genre|Runtime|imdbRating");
+ //tt0172495
+ echo getJsonPy($imdb, $vad);
  
