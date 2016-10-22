@@ -24,12 +24,13 @@
  foreach($Data, getkey(DataList, RegexMovie, $RegexList)){	
 	setmov(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexMovie, $RegexList)), getkey($Data . "Replace", RegexMovie, $RegexList), "", | ), $Data, $MovieName);
 	}; */
+
  foreach($vad, "Title|Year|Genre|Runtime|imdbRating|Country|Actors"){
 	if($vad != "imdbRating"){
-		setmov(getJsonPy($imdb, $vad), $vad,, $MovieName);
+		setmov(getJsonPy($IMDbId, $vad), $vad, $MovieName);
 	};
 	else{
-		setmov(getJsonPy($imdb, $vad), "Rating", $MovieName);
+		setmov(getJsonPy($IMDbId, $vad), "Rating", $MovieName);
 	};
  };
 

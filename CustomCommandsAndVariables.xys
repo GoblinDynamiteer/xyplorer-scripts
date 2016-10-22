@@ -34,6 +34,7 @@
  
 
  //läser OMDB med pythonscript som parsar JSON, skicka imdb som tt##### och what som ska returners; Title, Year, Genre
+ //python json_web.py "tt0790686" "Year"
  function getJsonPy($imdb, $what) {return runret('python json_web.py "' . $imdb . '" "'. $what .'"', "D:\Google Drive\Scriptstuff\pyt\");} 
  
  function gettv($data, $ShowName) {status "Hämtar " . $data . " för " . $ShowName, 000000, progress;return getkey($data, $ShowName, $TVDb);} 
