@@ -1,8 +1,0 @@
-"Exportera kod-taggar"
- //tagexport("D:\Google Drive\Scriptstuff\tags\tags.dat", "D:\Google Drive\Utbildning\Mjukvaruutvecklare inbyggda system\Kod\Boken\");
- tagexport("D:\Google Drive\Scriptstuff\tags\tags_d.dat", "D:\");
-
-"Importera kod-taggar"
- //tagload("D:\Google Drive\Scriptstuff\tags\tags.dat");
- tagload("D:\Google Drive\Scriptstuff\tags\tags_d.dat");
-
