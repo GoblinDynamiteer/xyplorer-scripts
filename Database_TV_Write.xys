@@ -7,10 +7,22 @@
 	settv(regexmatches(input("Ange Imdb-ID/Imdb-Url för " . $ShowName), "tt\d{1,}"), IMDbId, $ShowName);
 	$IMDbId = gettv(IMDbId, $ShowName);
 	};
- Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
+	
+//Gammal ombd-scraper
+/*  Perm $OMDbbAPIinfo = readurlUTF8("http://www.omdbapi.com/?i=" . $IMDbId . "&y=&plot=short&r=json",0,1);
  foreach($Data, getkey(DataList, RegexTV, $RegexList)){
 	settv(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexTV, $RegexList)), getkey($Data . "Replace", RegexTV, $RegexList), "", | ), $Data, $ShowName);
+	}; */
+ step;
+ foreach($vad, "Title|Year|Genre|imdbRating|Country|Actors|totalSeasons"){
+	if($vad != "imdbRating"){
+		settv(getJsonPy($IMDbId, 1, $vad), $vad, $ShowName); //Sätter Python-response till databas-key "vad" för tv-serien
 	};
+	else{
+		settv(getJsonPy($IMDbId, 1, $vad), "Rating", $ShowName);
+	};
+ };
+ 
  settv(latestep(), LatestLocalEpisode, $ShowName);
  if (getnext(NextEpisode, $ShowName) != Ended){sub "_NextAiring";};
  load CustomColumnsWriteData, UpdateOneTV;
@@ -68,7 +80,7 @@
 	releaseglobals 3;
 	end 1, "Fler än en markerad fil/mapp, avbryter script";
  };
- if (regexmatches($ShowFullPath, "ds.TV") == ""){
+ if (regexmatches($ShowFullPath, "ds.TV") == ""){ // ds\tv
 	releaseglobals 3;
 	end 1, "Ej i \\ds\TV, avbryter.";
  };

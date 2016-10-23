@@ -27,10 +27,10 @@
 
  foreach($vad, "Title|Year|Genre|Runtime|imdbRating|Country|Actors"){
 	if($vad != "imdbRating"){
-		setmov(getJsonPy($IMDbId, $vad), $vad, $MovieName);
+		setmov(getJsonPy($IMDbId, 1, $vad), $vad, $MovieName);
 	};
 	else{
-		setmov(getJsonPy($IMDbId, $vad), "Rating", $MovieName);
+		setmov(getJsonPy($IMDbId, 1, $vad), "Rating", $MovieName);
 	};
  };
 

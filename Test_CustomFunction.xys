@@ -1,6 +1,13 @@
  include CustomCommandsAndVariables;
- $imdb = input("IMDB");
- $vad = popupmenu("Title|Year|Genre|Runtime|imdbRating");
+ $imdb = input("IMDB",,"tt0475784");
+ $typ = popupmenu("Film;1|Tv;2");
+ if($typ == 1){
+	 $vad = popupmenu("Title|Year|Genre|Runtime|imdbRating");
+	};
+ if($typ == 2){
+	 $vad = popupmenu("name|status|totalSeasons|lastAired");
+	};
  //tt0172495
- echo getJsonPy($imdb, $vad);
+ //tt0475784   -westworld
+ echo getJsonPy($imdb, $typ, $vad);
  
