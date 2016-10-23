@@ -18,6 +18,7 @@
 		if (regexmatches($ShowName, "marvel's.agents.of.s.h.i.e.l.d") != "") 		{$ShowName = "Marvels Agents of S.H.I.E.L.D";};
 		if (regexmatches($ShowName, "from.dusk.till.dawn") != "") 					{$ShowName = "From Dusk Till Dawn";};
 		if (regexmatches($ShowName, "Scream.Queens") != "") 						{$ShowName = "Scream Queens";};
+		if (regexmatches($ShowName, "supergirl") != "") 									{$ShowName = "Supergirl 2015";};
 		$Path = "\\ds\TV\" . $ShowName;
 		if ($Path != ""){
 			setkey $Path, Path, $File, $PreMoveData;
