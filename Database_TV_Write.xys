@@ -13,13 +13,18 @@
  foreach($Data, getkey(DataList, RegexTV, $RegexList)){
 	settv(replacelist(regexmatches($OMDbbAPIinfo, getkey($Data, RegexTV, $RegexList)), getkey($Data . "Replace", RegexTV, $RegexList), "", | ), $Data, $ShowName);
 	}; */
- step;
+
  foreach($vad, "Title|Year|Genre|imdbRating|Country|Actors|totalSeasons"){
 	if($vad != "imdbRating"){
-		settv(getJsonPy($IMDbId, 1, $vad), $vad, $ShowName); //Sätter Python-response till databas-key "vad" för tv-serien
+		$data = getJsonPy($IMDbId, 1, $vad);
+		$data = replacelist($data, "<crlf>|û", "|–", "|"); //tar bort newline, och byter û till -, kommer i tv-år spann: 2001û2003, antagligen enc fel
+		//echo $data;
+		settv($data, $vad, $ShowName); //Sätter Python-response till databas-key "vad" för tv-serien
 	};
 	else{
-		settv(getJsonPy($IMDbId, 1, $vad), "Rating", $ShowName);
+		$data = getJsonPy($IMDbId, 1, $vad);
+		$data = replacelist($data, "<crlf>|û", "|–", "|");
+		settv($data, "Rating", $ShowName);
 	};
  };
  
