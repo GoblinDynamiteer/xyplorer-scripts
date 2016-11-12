@@ -7,6 +7,14 @@
 
 "Skapa .c-fil"
  open new(get("Path", [pane=a]) . "\" . input("Ange filnamn") . ".c");
+ 
+"Skapa .ino-fil"
+	//Filnamn med path och user input
+	$default = gettoken(get("Path", [pane=a]), -1, \);
+	$filename = get("Path", [pane=a]) . "\" . input("Ange filnamn", , $default) . ".ino";
+	//Skapar ny fil med default-kod (setup & loop- funktioner)
+	writefile($filename, "void setup(){" . <crlf><crlf> . "}" . <crlf><crlf> . "void loop(){" . <crlf><crlf> . "}", , ta);
+	open $filename;
 
 "Kompilera markerad .c-fil"
  $gccpath = "C:\Program Files (x86)\mingw-w64\i686-6.2.0-win32-dwarf-rt_v5-rev1\mingw32\bin\gcc.exe";
